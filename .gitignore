@@ -1,0 +1,10 @@
+# Python environment
+.venv/
+__pycache__/
+*.pyc
+
+# Working notes / scratch
+tmp/
+
+
+paper/
