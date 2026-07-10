@@ -2,7 +2,7 @@
 
 A Model of Hierarchy as a Position Amplifier, and What It Can and Cannot Recover.
 
-This repository contains the paper (`paper/paper.tex`), all analysis code
+This repository contains  all analysis code
 (`scripts/`), the bundled Music Lab dataset, and a single-command runner that
 reproduces every figure and headline number.
 
@@ -117,5 +117,8 @@ pdflatex -output-directory=paper paper/paper.tex   # run twice for references
 ```
 
 ## License
+
+## Author
+krse
 
 See `LICENSE`.
