@@ -12,12 +12,16 @@
 #   --online   also run the Design 2 real-data passes: Wikipedia RfA (toppling
 #              arm, downloads SNAP data) and, if GITHUB_TOKEN is set, GitHub
 #              stars (free-token arm)
+#   --lichess  also run the non-identifiability worked example (Section
+#              "manufacture vs revelation in online chess"): downloads ~150 MB
+#              of monthly Lichess PGN dumps once and prints Table tab:lichess
 #
 # Usage:
 #   ./run_all.sh                   # fast offline reproduction (figures + numbers)
 #   ./run_all.sh --power           # + Monte-Carlo power analysis (slow, offline)
 #   ./run_all.sh --online          # + Wikipedia RfA + GitHub stars (Design 2)
-#   ./run_all.sh --power --online  # everything
+#   ./run_all.sh --lichess         # + Lichess non-identifiability worked example
+#   ./run_all.sh --power --online --lichess  # everything
 #   ./run_all.sh --help
 #
 set -euo pipefail
@@ -27,14 +31,16 @@ VENV="$ROOT/.venv"
 PY="$VENV/bin/python"
 SCRIPTS="$ROOT/scripts"
 
-usage() { sed -n '3,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
+usage() { sed -n '3,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0; }
 
 ONLINE=0
 POWER=0
+LICHESS=0
 for arg in "$@"; do
   case "$arg" in
     --online) ONLINE=1 ;;
     --power) POWER=1 ;;
+    --lichess) LICHESS=1 ;;
     -h|--help) usage ;;
     *) echo "unknown option: $arg (try --help)"; exit 2 ;;
   esac
@@ -128,6 +134,20 @@ if [ "$ONLINE" -eq 1 ]; then
 else
   echo
   echo ">> skipping online passes (Wikipedia RfA download, GitHub API); use --online to include them"
+fi
+
+# ---- 5. Lichess non-identifiability worked example (real data, opt-in) -----
+if [ "$LICHESS" -eq 1 ]; then
+  echo
+  echo "### LICHESS worked example: manufacture vs revelation (Table tab:lichess)"
+  if ! command -v zstd >/dev/null 2>&1; then
+    echo ">> skipping: the 'zstd' CLI is required to stream the PGN dumps (apt install zstd)"
+  else
+    run lichess_worked_example.py   # downloads ~150MB of monthly dumps once, caches under scripts/data/lichess
+  fi
+else
+  echo
+  echo ">> skipping Lichess worked example (~150MB download); use --lichess to include it"
 fi
 
 echo

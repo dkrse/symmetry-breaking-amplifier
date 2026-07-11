@@ -70,6 +70,32 @@ All paths below are relative to this directory (`scripts/data/`).
 - **Used by:** `musiclab_analysis.py` (Design 1).
 - **SHA-256:** see `SHA256SUMS` (the four `downloads_v*_lexorder.txt`, plus README and PDF).
 
+## 5. Lichess games — `lichess/2013-{01,07,12}.pgn.zst`
+
+- **Source:** Lichess open database, monthly standard-rated PGN dumps. Licensed CC0.
+- **URL:** <https://database.lichess.org/> (per-month files under `standard/`).
+- **Fetch** (the analysis script `lichess_worked_example.py` also auto-downloads
+  these into `lichess/` if absent; `run_all.sh --lichess` triggers it):
+  ```bash
+  mkdir -p lichess
+  for M in 2013-01 2013-07 2013-12; do
+    curl -sL -o lichess/$M.pgn.zst \
+      https://database.lichess.org/standard/lichess_db_standard_rated_$M.pgn.zst
+  done
+  ```
+- **Role:** 2013-01 is the near-equal entry cohort; 2013-07 and 2013-12 are the
+  +6- and +12-month convergent skill estimates (`k-hat`) for the
+  non-identifiability worked example (Section "manufacture vs revelation in online
+  chess", `Table tab:lichess`).
+- **Requires:** the `zstd` CLI (streaming decompression).
+- **Used by:** `lichess_worked_example.py` (`--lichess`).
+- **SHA-256** (not in `SHA256SUMS`: fetched on demand, ~150 MB, not bundled):
+  ```
+  aa40b3671fa3cf1072eb182892cd90b0e1e003a4a5943492f64b77e7f3fd1635  2013-01.pgn.zst
+  51da6cfc0a6aa6e5f71a21691650dad0dc1adcabb5ba9e7de36f559ffb17a1f7  2013-07.pgn.zst
+  a77d132bdf7aece20f7f3b9b3aa69eae891f2a339e59bb148984c1577eba2de9  2013-12.pgn.zst
+  ```
+
 ---
 
 ## Verifying

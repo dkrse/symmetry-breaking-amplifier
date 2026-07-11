@@ -371,10 +371,58 @@ early-lead CSVs and draws the combined Design 2 figure, all three real curves
 against the `sqrt(tau)` null. No new computation; it exists so the figure
 regenerates from the saved positions without re-running the `--online` passes.
 
+## 11. Non-identifiability worked example (`lichess_worked_example.py`, `--lichess`)
+
+Demonstrates, on one large public dataset, the boundary between the two questions
+the paper separates:
+
+- **A (the map)**, whether the process is amplifying, is identifiable from a
+  trajectory (sections 1, 10).
+- **B (the seed)**, whether what got inflated was capability or position, skill or
+  amplified noise, is **not**. The non-identifiability theorem says the map
+  carries capability `k` and position `p` only through their sum `a = k + p`, and
+  weights an early fluctuation almost like an inherited head start, so no
+  trajectory statistic recovers the split. Recovering B needs an exogenous,
+  non-amplified handle on capability, returning a **manufactured share**
+  `R = 1 - corr^2(final order, k-hat)`.
+
+**Data & channel.** Online chess supplies all three ingredients at once: a
+near-homogeneous start (entrants seeded near a common provisional rating), a
+genuine amplifier (rating amplified and revocable game by game), and an exogenous
+`k-hat` (each player's *converged* rating months later, a different sampling that
+averages the early fluctuation away). Three monthly Lichess dumps are streamed via
+`zstd`: `2013-01` (entry cohort), `2013-07`, `2013-12` (+6/+12-month `k-hat`).
+
+**Algorithm.**
+```
+for each player in 2013-01 with >= 30 games:
+    entry_elo   = rating at first game        # near-equal seed in the narrow band
+    monthend_elo = rating at last game        # the order that "forms" during the month
+for the +6 and +12 month dumps:
+    k_hat[player] = mean rating that month, for players with >= 20 games there
+for band in {near-equal 1480-1520, control 1000-2200}:
+    corr(entry_elo,    k_hat)   # does the seed predict true skill?
+    corr(monthend_elo, k_hat)   # does the formed order predict true skill?
+    R = 1 - corr(monthend_elo, k_hat)^2
+```
+
+**Result (Table `tab:lichess`).** In the near-equal cohort the month-end order is
+decoupled from the entry seed (`corr = -0.03`) with super-diffusive lock-in, so it
+*looks* manufactured (signature A), yet it predicts converged skill at `0.77`, so
+`R ~ 0.40`. Because measurement error in `k-hat` attenuates the correlation, that
+`0.40` is an **upper bound** on manufacture, so at least about `60%` is revealed
+skill. The heterogeneous control is skill-dominated already at entry
+(`corr(entry, k-hat) = 0.71`). The example does not show chess hierarchies are
+manufactured. It shows the opposite, and that is the methodological point. A was
+right about the dynamics and silent, as it must be, about the seed. There is no
+randomness; the result is deterministic given the dumps.
+
 ### Data provenance and integrity
 
 Every dataset is public and free; `scripts/data/DATA_SOURCES.md` records each
 source URL, its exact download command, and a SHA-256 hash, with machine-checkable
 checksums in `scripts/data/SHA256SUMS` (verified by `run_all.sh` before running).
 The only scripts that touch the network are the `--online` real-data passes
-(sections 8, 9) and the one-off Crunchbase fetch for 10b.
+(sections 8, 9), the one-off Crunchbase fetch for 10b, and the `--lichess` worked
+example (section 11, which fetches ~150 MB of Lichess dumps once, cached under
+`scripts/data/lichess/` and not bundled).
