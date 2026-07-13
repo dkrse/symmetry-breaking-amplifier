@@ -168,7 +168,7 @@ pdflatex -output-directory=paper paper/paper.tex   # run twice for references
 
 ## License
 
+Released under the MIT License. See `LICENSE`.
+
 ## Author
 krse
-
-See `LICENSE`.

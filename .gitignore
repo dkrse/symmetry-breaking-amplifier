@@ -11,3 +11,6 @@ paper/
 
 # Lichess dumps fetched on demand by --lichess (~150MB, not bundled)
 scripts/data/lichess/
+
+# analysis --
+analyza-sk/
