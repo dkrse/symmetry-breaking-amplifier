@@ -10,8 +10,8 @@ raw sources already in the repo:
 
   * GitHub  : star timestamps cached under scripts/data/github_cache/ (all 295
               repos of the existing cohort present). Position = cumulative star
-              stock; per-repo clock t0 = first cached star (a near-equal Q1-2019
-              entry cohort), horizon 24 months. -> output/github_earlylead_fine.csv
+              stock; per-repo clock t0 = first cached star (a Q1-2019 cohort sharing
+              an entry POINT, not a common quality), horizon 24 months. -> output/github_earlylead_fine.csv
   * Wikipedia RfA : raw scripts/data/wiki-RfA.txt.gz (bundled). Position at tau =
               running NET support (support-oppose, revocable) and SUPPORT-only
               (free token). -> output/wiki_rfa_earlylead_fine.csv

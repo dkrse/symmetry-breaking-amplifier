@@ -10,10 +10,15 @@ scripts/data/crunchbase_rounds.csv. Columns used:
 
 Mapping to the model. A startup's position is its CUMULATIVE capital raised -- a
 self-reinforcing, essentially free-token stock (funding is not revoked, so this is
-the free-token pole, like GitHub stars). Entrants start near-equal at their first
-(seed/early) round. We take the cohort of companies whose FIRST round falls in one
-year and that raise at least twice, clock each company from its own first round
-over a fixed horizon, and ask the capability-free early-lead question (Eq. rhotau):
+the free-token pole, like GitHub stars). Entrants share a common STARTING POINT,
+their first (seed/early) round, which is not the same as being alike: companies
+differ in quality, i.e. in per-step drift, so this cohort is the case of paper
+Eq. rhodrift and clears the sqrt(tau) null at g=0 with no amplification at all.
+Nothing here rests on beating that null; the identifying test is the contrast.
+
+We take the cohort of companies whose FIRST round falls in one year and that raise
+at least twice, clock each company from its own first round over a fixed horizon,
+and ask the capability-free early-lead question (Eq. rhotau):
 
     rho(tau) = corr( rank cumulative-capital at fraction tau of the horizon,
                      rank cumulative-capital at the horizon ).
@@ -21,10 +26,12 @@ over a fixed horizon, and ask the capability-free early-lead question (Eq. rhota
 This is measured on a FINE tau grid (18 points), finer than the bundled
 GitHub/Wikipedia curves, to resolve the small-tau lock-in.
 
-Prediction: as a free token, startups should lock in early (rho(tau) well above
-sqrt(tau), tau_90 small-to-moderate) and, after tau_90 rescaling, sit near the
-amplifier master and the other free-token systems (see real_data_collapse.py).
-No capability/quality variable is used.
+Prediction: as a free token, startups should lock in early and, after tau_90
+rescaling, share a shape with the other free-token systems (see
+real_data_collapse.py). Note that "rho(tau) well above sqrt(tau)" is NOT the
+prediction being tested, since unequal quality alone produces that; the curve is
+reported for the collapse, which is a shape comparison across domains. No
+capability/quality variable is used.
 """
 import csv
 from pathlib import Path
@@ -38,7 +45,7 @@ OUTCSV = ROOT / "output" / "startup_earlylead.csv"
 TAUS = np.array([0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25,
                  0.3, 0.375, 0.45, 0.55, 0.65, 0.75, 0.85, 1.0])
 
-COHORT_YEAR = "2010"        # first-round year -> near-equal entry cohort
+COHORT_YEAR = "2010"        # first-round year -> common entry POINT (not equal quality)
 HORIZON_DAYS = 60 * 30.44   # ~60 months of runway, data extends to end-2015
 MIN_ROUNDS = 2              # need a trajectory, not a single point
 

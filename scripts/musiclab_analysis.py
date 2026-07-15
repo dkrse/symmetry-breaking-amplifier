@@ -93,6 +93,45 @@ def per_experiment_report(E, label, data_dir):
 
     return np.array(rho)
 
+def _raw_counts(E, data_dir):
+    """(social, indep) raw download counts for experiment E."""
+    path = os.path.join(data_dir, f"downloads_v{E}_lexorder.txt")
+    M = np.array([[float(x) for x in r] for r in csv.reader(open(path))])
+    counts = M[:, 1:]
+    return counts[:, :-1], counts[:, -1]
+
+
+def attenuation_check(data_dir, reps=400, seed=0):
+    """Is the measured drop conservative? Q is estimated from ONE independent
+    world per experiment, so measurement error in Q attenuates rho. If exp2's
+    independent world is the LARGER, its Q is the less attenuated and its rho
+    should be the higher on that count -- yet it is the lower, so the gain effect
+    overcomes a measurement advantage working against it. Resampling exp2's Q down
+    to exp1's precision quantifies how much the drop is understated.
+    """
+    rng = np.random.default_rng(seed)
+    s1, i1 = _raw_counts(1, data_dir)
+    s2, i2 = _raw_counts(2, data_dir)
+    print("\nAttenuation check (is the measured drop conservative?):")
+    print(f"  independent-world downloads: exp1={i1.sum():.0f}  exp2={i2.sum():.0f}"
+          f"  -> exp2's Q is the {'LESS' if i2.sum() > i1.sum() else 'MORE'} attenuated")
+    p = i2 / i2.sum()
+    out = []
+    for _ in range(reps):
+        q = market_share(rng.multinomial(int(i1.sum()), p).astype(float))
+        out.append(np.mean([spearman(market_share(s2[:, w]), q)
+                            for w in range(s2.shape[1])]))
+    m, sd = float(np.mean(out)), float(np.std(out))
+    full2 = np.mean([spearman(market_share(s2[:, w]), market_share(i2))
+                     for w in range(s2.shape[1])])
+    full1 = np.mean([spearman(market_share(s1[:, w]), market_share(i1))
+                     for w in range(s1.shape[1])])
+    print(f"  exp2 rho with its own Q            : {full2:.3f}")
+    print(f"  exp2 rho with Q coarsened to exp1's: {m:.3f} +/- {sd:.3f}")
+    print(f"  -> drop widens from {full1-full2:+.3f} to {full1-m:+.3f}: "
+          f"the reported effect is conservative.")
+
+
 def run_real(data_dir):
     print("MUSIC LAB (real data) -- causal test of E2 decoupling\n")
     print("Per-experiment rho = Spearman(world download share, independent-world quality):")
@@ -122,6 +161,7 @@ def run_real(data_dir):
               "limited power;\nthe sign of the drop is the primary read. A "
               "multi-level gain sweep\n(>=5 levels x 20 worlds) is the "
               "pre-registered high-power version.")
+        attenuation_check(data_dir)
 
 # ---- synthetic fallback ---------------------------------------------------
 

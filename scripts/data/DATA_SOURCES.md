@@ -83,8 +83,9 @@ All paths below are relative to this directory (`scripts/data/`).
       https://database.lichess.org/standard/lichess_db_standard_rated_$M.pgn.zst
   done
   ```
-- **Role:** 2013-01 is the near-equal entry cohort; 2013-07 and 2013-12 are the
-  +6- and +12-month convergent skill estimates (`k-hat`) for the
+- **Role:** 2013-01 is the entry cohort, near-equal in *entry rating* (the band is
+  1480–1520) but not in capability, which is the point of the example; 2013-07 and
+  2013-12 are the +6- and +12-month convergent skill estimates (`k-hat`) for the
   non-identifiability worked example (Section "manufacture vs revelation in online
   chess", `Table tab:lichess`).
 - **Requires:** the `zstd` CLI (streaming decompression).
@@ -103,11 +104,18 @@ All paths below are relative to this directory (`scripts/data/`).
 From this directory:
 
 ```bash
-sha256sum -c SHA256SUMS          # checks files 1, 2, 4 byte-for-byte
-# github_cache (file 3) is verified by its aggregate digest:
+# files 1, 2, 4 byte-for-byte. The github_cache line must be filtered out first:
+# it is a digest OF a listing, not of a file, so sha256sum -c cannot open it.
+grep -v 'github_cache/\[' SHA256SUMS | sha256sum -c
+
+# github_cache (file 3) is verified by its aggregate digest instead:
 find github_cache -name '*.json' | sort | xargs sha256sum | sha256sum
 #   expect: 54556cb41f059787a9b97b2975c45f80bfce93c835e8dd988396b38f7031abdc
 ```
 
-`SHA256SUMS` lists the aggregate cache digest as a comment (it is path-sensitive,
-so it is checked by the command above rather than by `sha256sum -c`).
+The `github_cache/[3114 json files]` entry in `SHA256SUMS` is a **placeholder, not
+a checkable line**: the digest covers the sorted listing of all 3114 files, so it
+is path-sensitive and has no single file to hash. Plain `sha256sum -c SHA256SUMS`
+therefore reports one `FAILED open or read` and exits non-zero; that is expected,
+and it is why the command above filters the line and why `run_all.sh` does the
+same in its integrity check.

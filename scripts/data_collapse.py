@@ -122,6 +122,28 @@ def sim_diff(rng, sigma=0.05):
     return x
 
 
+def sim_het(rng, var_a, sigma=0.05):
+    """g=0 with a HETEROGENEOUS per-step drift a_i ~ N(0, var_a).
+
+    The null that defeats the magnitude test: entities start together but simply
+    differ, so a persistent trait predicts the final order with no feedback at
+    all, lifting rho(tau) above sqrt(tau) (paper Eq. rhodrift). Included here to
+    check whether SHAPE separates what magnitude cannot. Unlike the amplifier,
+    this family has no single rescaled shape -- each var_a traces a different
+    one -- so it should not collapse.
+    """
+    x = np.empty((T + 1, N))
+    x[0] = rng.normal(0, 1e-6, N)
+    a = rng.normal(0, np.sqrt(var_a), N)
+    for t in range(T):
+        x[t + 1] = x[t] + a + rng.normal(0, sigma, N)
+    return x
+
+
+# var_a decade spanned by the heterogeneity null (mean curve = its "master")
+HET_VAR_A = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
+
+
 def sim_pa(rng, M=None, seed_stock=1.0):
     """Plain Barabasi preferential attachment on a monotone stock."""
     if M is None:
@@ -189,6 +211,16 @@ def run():
     dist_diff = float(np.sqrt(((resc_diff - master) ** 2).mean()))
     dist_pa = float(np.sqrt(((resc_pa - master) ** 2).mean()))
 
+    # --- heterogeneity null (g=0, unequal entities): does SHAPE separate it? ---
+    het_resc = []
+    for va in HET_VAR_A:
+        r = rho_tau(sim_het(rng, var_a=va))
+        het_resc.append(_rescaled_curve(r, tau90(r), ugrid))
+    het_resc = np.array(het_resc)
+    het_master = het_resc.mean(axis=0)
+    het_internal = float(np.sqrt(((het_resc - het_master) ** 2).mean()))
+    dist_het = float(np.sqrt(((het_master - master) ** 2).mean()))
+
 
     # ---- report ----
     print("=== Test B: data-collapse universality of rho(tau) ===\n")
@@ -202,6 +234,10 @@ def run():
           f"   ({dist_diff/internal:.1f}x the family spread)")
     print(f"  pref. attachment RMS distance to master           : {dist_pa:.4f}"
           f"   ({dist_pa/internal:.1f}x the family spread)")
+    print(f"  heterogeneity (g=0, unequal) dist to master       : {dist_het:.4f}"
+          f"   ({dist_het/internal:.1f}x the family spread)")
+    print(f"  ...and its OWN internal spread                    : {het_internal:.4f}"
+          f"   (does not collapse: no single rescaled shape)")
     passed = (dist_diff > 3 * internal) and (dist_pa > 2 * internal)
     print(f"\n  COLLAPSE {'HOLDS' if passed else 'FAILS'}: amplifier family "
           f"collapses; diffusion/PA fall off the master curve."

@@ -28,6 +28,9 @@ explicit failure condition:
 3. **Capability-free `sqrt(tau)` early-lead law.** An early-lead-persistence law
    (`rho(tau)`, the `sqrt(tau)` diffusion baseline, and its collapse under
    revocation) that tells amplification from diffusion without measuring capability.
+   The `sqrt(tau)` baseline holds only for a homogeneous *population*, not merely a
+   common start: unequal entities clear it at zero gain, so in data the identifying
+   test is the revocation **contrast**, never the size of the excess.
 
 **B. The seed is *not* identifiable.** Whether what got inflated was capability
 or position, real skill or amplified noise, is **not** recoverable from a
@@ -40,10 +43,13 @@ data. Recovering B needs an **exogenous, non-amplified handle on capability**
 (quality fixed by construction, randomised, or a convergent later estimate), which
 returns not a verdict but a **manufactured share** `R = 1 - corr^2`.
 
-A single large public dataset shows both sides at once (`--lichess`). A near-equal
-online-chess cohort whose order *looks* manufactured, in that it is decoupled from
-entry and locks in faster than diffusion, turns out about `60%` **revealed** skill
-(`R ~ 0.4`) once a convergent skill estimate is admitted.
+A single large public dataset shows both sides at once (`--lichess`). An
+online-chess cohort with near-equal *entry ratings*, whose order *looks*
+manufactured (decoupled from entry, locking in faster than the `sqrt(tau)` law),
+turns out about `60%` **revealed** skill (`R ~ 0.4`) once a convergent skill
+estimate is admitted. The example is doubly cautionary: neither of those two
+appearances survives inspection either, since the cohort was never homogeneous in
+capability, only in what was known about it at entry.
 
 Each result is stated with an explicit failure condition; the empirical passes are
 suggestive rather than confirmatory, and the paper says so.
@@ -98,13 +104,16 @@ commands in `scripts/data/DATA_SOURCES.md`.
 ## The two Design 2 arms (`--online`)
 
 Early-lead persistence `rho(tau)` on a monotone accumulating stock does **not** by
-itself distinguish this amplifier from ordinary cumulative advantage: plain
-preferential attachment already exceeds the `sqrt(tau)` diffusion null (shown by
-`earlylead_pa_null.py`). The identifying test is the **free-token vs. toppling
-contrast**:
+itself distinguish this amplifier from anything. Plain preferential attachment
+already exceeds the `sqrt(tau)` diffusion null (shown by `earlylead_pa_null.py`),
+and so does a population at **zero gain** whose entities merely differ in quality,
+since a persistent trait predicts the final order with no feedback at all. The
+identifying test is therefore the **free-token vs. toppling contrast**, which
+heterogeneity inflates on both arms alike and so cannot manufacture:
 
 - **Free-token arm** — `github_earlylead.py` on GitHub stars (no per-unit ceiling,
-  no revocation): the model predicts *strong* early-lead persistence.
+  no revocation): the model predicts *strong* early-lead persistence. Read only
+  against the toppling arm, never as a magnitude in its own right.
 - **Toppling arm** — `wiki_rfa_toppling.py` on Wikipedia Requests for Adminship, a
   contested, revocable status: the model predicts persistence *collapses* toward
   the diffusion regime, because opposition can topple an early front-runner. The
@@ -133,28 +142,36 @@ free. The Wikipedia RfA arm needs no token (it downloads a public SNAP file once
 ## The non-identifiability worked example (`--lichess`)
 
 `lichess_worked_example.py` demonstrates the boundary between A and B on one large
-public dataset. Online chess supplies three things together: a near-homogeneous
-start (every entrant seeded near a common provisional rating), a genuine amplifier
-(the rating is amplified and revocable game by game), and an exogenous channel to
+public dataset. Online chess supplies a start that *looks* homogeneous (every
+entrant seeded near a common provisional rating), a plausible amplifier (the
+rating is amplified and revocable game by game), and an exogenous channel to
 capability (each player's *converged* rating months later, once hundreds of games
 have averaged the early fluctuation away, which is the `k-hat` of `R = 1 - corr^2`).
+The first two turn out to be less than they appear; the third is what makes the
+lesson visible.
 
 The script streams three monthly [Lichess open-database](https://database.lichess.org)
 dumps (2013-01 as the entry cohort; 2013-07 and 2013-12 as the +6- and +12-month
-convergent skill estimates), forms a near-equal entry-Elo cohort (1480–1520) and a
-heterogeneous control (1000–2200), and prints `Table tab:lichess`:
+convergent skill estimates), forms a near-equal-**rated** entry cohort (1480–1520)
+and a heterogeneous control (1000–2200), and prints `Table tab:lichess`:
 
-- **The order looks manufactured.** In the near-equal cohort the order that forms
-  is decoupled from the entry rating (`corr(entry, month-end) = -0.03`) with
-  super-diffusive early-lead lock-in. From the trajectory alone, it looks
-  manufactured.
-- **The convergent channel refutes it.** The convergent `k-hat` overturns that
-  reading. The month-end order predicts converged skill at `0.77`, so
-  `R = 1 - 0.77^2 ~ 0.40`, an *upper* bound on manufacture (measurement error in
-  `k-hat` attenuates the correlation), so at least about `60%` is revealed skill.
-  The example does not show chess hierarchies are manufactured. It shows the
-  opposite, and that is the point. Signature A was correct about the dynamics and
-  silent, as it must be, about the seed.
+- **The order looks manufactured.** The order that forms is decoupled from the
+  entry rating (`corr(entry, month-end) = -0.03`) and locks in faster than the
+  `sqrt(tau)` law. From the trajectory alone, it looks manufactured.
+- **Neither appearance survives.** The band equalised the entry *estimate*, not
+  capability: Lichess seeds newcomers near 1500 precisely because it does not know
+  them yet. The script's `Entry-band diagnostic` makes this visible, as the
+  cohort's month-end spread (s.d. `213`) lands on the whole population's (`212`).
+  So the entry decoupling is what a 40-point band produces whatever the dynamics,
+  and the lock-in is what an unequal population produces at zero gain. Neither
+  signature identifies A here.
+- **The convergent channel settles B.** The month-end order predicts converged
+  skill at `0.77`, so `R = 1 - 0.77^2 ~ 0.40`, an *upper* bound on manufacture
+  (measurement error in `k-hat` attenuates the correlation), so at least about
+  `60%` is revealed skill. The example does not show chess hierarchies are
+  manufactured. It shows the opposite, and that is the point: what looked like an
+  amplifier acting on noise was shown to be neither, and one exogenous channel
+  corrects both errors.
 
 ## Build the paper
 

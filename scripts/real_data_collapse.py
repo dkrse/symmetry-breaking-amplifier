@@ -104,6 +104,31 @@ def rescale(rhos, taus):
     return np.interp(UGRID, u[o], rhos[o]), t90
 
 
+def het_master(seed=20260709):
+    """Mean rescaled curve of the g=0 heterogeneity null (paper Eq. rhodrift).
+
+    Entities start together but differ in drift, so persistence exceeds sqrt(tau)
+    with no amplification at all. In simulation this null does NOT collapse
+    (data_collapse.py), so shape should exclude it. On the real data it is not
+    excluded -- reported here rather than omitted, since it counts against the
+    amplifier reading.
+    """
+    from data_collapse import sim_het, HET_VAR_A
+
+    rng = np.random.default_rng(seed)
+    taus = np.array([0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.375, 0.5, 0.75, 1.0])
+    resc = []
+    for va in HET_VAR_A:
+        tr = sim_het(rng, var_a=va)
+        rf = _rank(tr[-1])
+        r = np.array([np.corrcoef(_rank(tr[min(max(int(round(t * T_SIM)), 1), T_SIM)]),
+                                  rf)[0, 1] for t in taus])
+        resc.append(rescale(r, taus)[0])
+    resc = np.array(resc)
+    m = resc.mean(axis=0)
+    return m, float(np.sqrt(((resc - m) ** 2).mean()))
+
+
 def sim_master(seed=20260709):
     rng = np.random.default_rng(seed)
     taus = np.array([0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.375, 0.5, 0.75, 1.0])
@@ -167,6 +192,15 @@ def run():
           f"   ({d_sq2/free_int:.1f}x mutual spread)")
     print(f"  revocable (Wiki net) distance to it    : {d_net:.4f}"
           f"   ({d_net/free_int:.1f}x mutual spread)")
+    hm, h_int = het_master()
+    d_het = _rms(hm, free_master)
+    print(f"  heterogeneity null (g=0) distance to it: {d_het:.4f}"
+          f"   ({d_het/free_int:.1f}x mutual spread)")
+    if d_het < free_int:
+        print("    ^ NEARER than the domains are to each other: on these data the")
+        print("      collapse does NOT discriminate against mere heterogeneity.")
+        print("      (that null carries a free parameter the amplifier family does not,")
+        print("       so this is not a like-for-like defeat -- but it is not excluded)")
     print("\nreading: three INDEPENDENT free-token domains (startups, stars, Wiki")
     print("  support) collapsing onto each other, and far above the sqrt null, is")
     print("  the universality signal; the sim master is calibration-dependent so the")

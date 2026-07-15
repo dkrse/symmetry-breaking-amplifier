@@ -5,14 +5,19 @@ Design 2 on real GitHub data: early-lead persistence of repository star stock.
 
 GitHub stars are a *free token* (no per-unit ceiling, no toppling), so the model
 predicts STRONG early-lead persistence and no optimal-gain downturn. This script
-measures it on a near-homogeneous entry cohort (repositories created in a fixed
-window, every one starting at 0 stars) and reports:
+measures it on a cohort with a COMMON STARTING POSITION (repositories created in
+a fixed window, every one starting at 0 stars). Note the wording: a common start
+is NOT a homogeneous population. Repositories plainly differ in quality, i.e. in
+their per-step drift, which is the case of paper Eq. rhodrift: such a cohort
+exceeds sqrt(tau) at g=0, with no amplification at all. The premise of the
+sqrt(tau) law is therefore NOT met here, and nothing below rests on it. Reports:
 
   rho(tau) = corr( rank of star stock at early fraction tau of the horizon,
                    rank of star stock at the horizon )              [Eq. (rhotau)]
 
 against three references:
-  * the analytic diffusion null   sqrt(tau)   (NOT sufficient on monotone stock),
+  * the analytic diffusion null   sqrt(tau)   (too weak twice over: it assumes a
+    homogeneous population, and it is not sufficient on a monotone stock anyway),
   * a preferential-attachment (PA) null fitted to the cohort's own growth,
   * tau_90, the smallest tau whose ordering correlates >= 0.9 with the final one.
 
@@ -338,9 +343,13 @@ def main():
     print(f"\nN repos = {len(rows)}   horizon = {args.horizon_months:.0f} months")
     print(f"tau_90:  observed={tau90(obs, taus):.3f}   "
           f"PA-null={tau90(pa, taus):.3f}   diffusion=1.000")
-    print("Reminder: obs > sqrt(tau) confirms cumulative advantage, NOT this "
-          "mechanism specifically. The identifying test is the free-token vs. "
-          "toppling contrast (run --arm topple on a revocable-status source).")
+    print("Reminder: obs > sqrt(tau) confirms nothing on its own. That null "
+          "assumes a HOMOGENEOUS population; these repos merely share a start, "
+          "and unequal quality alone clears it at g=0 (paper Eq. rhodrift). "
+          "Nor does beating the PA null identify this mechanism specifically. "
+          "The identifying test is the free-token vs. toppling contrast "
+          "(wiki_rfa_toppling.py), which heterogeneity inflates on both arms "
+          "alike and so cannot manufacture.")
 
     # save CSV
     header = "repo," + ",".join(f"tau_{t:g}" for t in taus)

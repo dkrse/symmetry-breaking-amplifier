@@ -131,6 +131,25 @@ rho(tau) = corr( rank x(tau*T), rank x(T) )
   final variance, so `rho(tau) -> 1` for small `tau`; the excess over `sqrt(tau)`
   grows with gain.
 
+**The null's premise, and why it matters everywhere below.** `rho(tau) = sqrt(tau)`
+needs the increments to be i.i.d. **across entities**, i.e. a homogeneous
+*population*, not merely a common starting point. Either kind of persistent
+difference breaks it, at `g=0` and with no feedback at all:
+
+```
+dispersed start:      rho(tau) = sqrt( (Var_x0 + sigma^2*tau*T) / (Var_x0 + sigma^2*T) )
+heterogeneous drift:  rho(tau) = (tau*T^2*Var_a + sigma^2*tau*T)
+                                 / sqrt( (tau^2*T^2*Var_a + sigma^2*tau*T)
+                                        * (T^2*Var_a + sigma^2*T) )
+```
+
+Both exceed `sqrt(tau)` whenever the respective variance is positive, because a
+persistent trait predicts the final order on its own. So an excess over `sqrt(tau)`
+identifies nothing in real data, where entities differ; only a **contrast** does,
+since heterogeneity inflates both arms of a within-domain comparison alike. This
+simulation is exempt because it injects no quality and starts homogeneous by
+construction, which is exactly the premise real cohorts fail.
+
 Reported: `rho(tau)` per gain, and `tau90` = smallest early fraction with
 `rho >= 0.9`. A Kesten reset (toppling) erases the early lead (`tau90 -> 1`), a
 discriminating sub-signature separating free-token from actively-contested
@@ -154,9 +173,13 @@ start, each yielding `rho(tau)` and `tau90`:
 
 Conclusion, carried into the paper: the *magnitude* of `rho(tau)` does not
 identify this mechanism (PA already exceeds the amplifier), so an excess over
-`sqrt(tau)`, or even over a PA null, is not diagnostic. The clean discriminator
-is the **free-token/toppling contrast**: the same amplifier loses its early-lead
-persistence under revocation, something plain cumulative advantage cannot mimic.
+`sqrt(tau)`, or even over a PA null, is not diagnostic. It is in fact worse than
+that: a `g=0` population whose entities merely differ in quality also clears the
+`sqrt(tau)` null (section 1), so magnitude fails to separate amplification even
+from **no amplification at all**. The clean discriminator is the
+**free-token/toppling contrast**: the same amplifier loses its early-lead
+persistence under revocation, something plain cumulative advantage cannot mimic,
+and heterogeneity inflates both arms alike so it cannot manufacture the gap.
 This motivates the two real-data arms of sections 8 and 9.
 
 ---
@@ -232,10 +255,25 @@ differences **cannot** come from quality — they are the amplifier.
 
 Result: `rho` falls `0.765 -> 0.651` (eight worlds each; Welch `t = 4.19`, one-sided
 `p < 1e-3`) while concentration rises (Gini `0.34 -> 0.50`), landing almost exactly
-on the simulated Design 1 figure (`0.76 -> 0.65`). Caveat: with only two gain levels
-and eight worlds each the two-level test is under-powered; the sign is the primary
-read, and the pre-registered high-power version is a multi-level gain sweep (whose
-power is estimated in section 7).
+on the simulated Design 1 figure (`0.76 -> 0.65`).
+
+**Why this design succeeds where the chess example (section 11) cannot.** Identical
+songs across worlds mean the heterogeneity that defeats the trajectory signatures
+elsewhere cannot operate: with quality held fixed, a between-world difference has
+nowhere to come from but the amplifier. This is not an assumption to be doubted, it
+is a property of the design.
+
+**`attenuation_check`: the drop is conservative.** `Q` is estimated from ONE
+independent world per experiment, so measurement error in `Q` attenuates `rho`. But
+exp2's independent world is the LARGER (`2192` vs `1578` downloads), so its `Q` is
+the *less* attenuated and its `rho` should be the *higher* on that count. It is the
+lower. Resampling exp2's `Q` down to exp1's precision drops it further, to
+`0.573 +/- 0.038`, widening the gap from `0.114` to `0.192`. The gain effect thus
+overcomes a measurement advantage working against it.
+
+Caveat: with only two gain levels and eight worlds each the two-level test is
+under-powered; the sign is the primary read, and the pre-registered high-power
+version is a multi-level gain sweep (whose power is estimated in section 7).
 
 ---
 
@@ -278,8 +316,11 @@ early-determined when a lead can be toppled.
 ## 9. Design 2 real data, free-token arm (`github_earlylead.py`, `--online`)
 
 GitHub repository stars: a **free token** (no per-unit ceiling, no toppling).
-Entity = repo; cohort = repos created in a fixed window (homogeneous start, every
-repo at 0 stars).
+Entity = repo; cohort = repos created in a fixed window. Every repo starts at 0
+stars, which is a common starting POINT, not a homogeneous population: repos
+plainly differ in quality, so this is the heterogeneous-drift case of section 1
+and the `sqrt(tau)` null is cleared here at `g=0` with no amplification. Nothing
+rests on beating it; the arm exists for the contrast with section 8.
 
 - **Cohort**: Search API for repos `created:<window> stars:<min>..<max>`.
 - **Trajectory**: paginate `stargazers` with `starred_at` timestamps
@@ -312,13 +353,18 @@ start. For each: `rho(tau)`, a continuous `tau90` (linear interpolation of the
 family **master** is their mean; the **internal spread** is the RMS deviation
 about it. Compare two other mechanisms rescaled the same way:
 
-- **diffusion** (`g=0`, the `sqrt(tau)` shape) and
-- **plain preferential attachment**.
+- **diffusion** (`g=0`, the `sqrt(tau)` shape),
+- **plain preferential attachment**, and
+- **heterogeneity** (`sim_het`, `g=0` with an unequal per-step drift), the null
+  that defeats the magnitude test (sections 1-2).
 
 Result: the amplifier family collapses tightly (internal RMS `~0.01`) while
-diffusion and PA sit `7`-`15x` that spread off the master, on **every seed**
-(`multiseed`, 8 seeds). The collapse separates the amplifier from PA by
-**shape** even though raw magnitude cannot (section 2).
+diffusion (`7x`), PA (`12x`) and heterogeneity (`10x`) all sit far off the master,
+on **every seed** (`multiseed`, 8 seeds). The heterogeneity null does not collapse
+at all (its own internal spread `~0.13` across a decade of `Var_a`), since each
+`Var_a` traces a different shape: persistent heterogeneity, unlike amplification,
+has no single rescaled shape. So the collapse separates the amplifier from PA
+**and from mere inequality** by shape, even though raw magnitude cannot (section 2).
 
 ### 10b. Three real free-token domains (`real_data_collapse.py`)
 
@@ -330,25 +376,40 @@ makes the otherwise **incommensurable** real clocks (years of startup capital vs
 months of stars vs a days-long vote sequence) comparable.
 
 - **Startups** (`startup_earlylead.py`): position = cumulative capital raised;
-  cohort = companies whose first round is in 2010 with >=2 rounds (near-equal
-  entry, 2325 companies); horizon ~60 months. Free token (funding not revoked).
+  cohort = companies whose first round is in 2010 with >=2 rounds (a common entry
+  POINT, not equal quality; 2325 companies); horizon ~60 months. Free token (funding not revoked).
   Open Crunchbase 2015 export (`scripts/data/crunchbase_rounds.csv`).
 - **GitHub stars** and **Wikipedia support-only** counts, re-extracted on a common
   fine 18-point grid by `refine_grids.py` (below).
 - plus the **revocable** Wikipedia net-support arm, for the free/revocable contrast.
 
 Two tests: (1) collapse onto the *simulated* amplifier master, which **fails**,
-because the real curves lock in *harder* than the calibrated family, so that
-master is calibration-dependent; (2) a **data-derived** master over the three real
-free-token domains, the honest object. Finding: the three collapse onto a common
-shape with mutual RMS spread `~0.07`, about `3x` closer to one another than the
-`sqrt(tau)` null sits to them. This is a shared shape distinct from diffusion, but a
-**loose** one. Two honest limits: refining the grid (section 10c) *weakens* the
-collapse (finer resolution exposes real small-`tau` shape differences that coarse
-binning hides), and the revocable arm is **not** resolved from the free-token
-master on Wikipedia's mild toppling. With only three domains one cannot yet tell a
-power problem (too few, too heterogeneously clocked) from a substantive limit (the
-"one exact curve" claim being too strong); only adding domains separates them.
+because that master is calibration-dependent; (2) a **data-derived** master over
+the three real free-token domains, the honest object. Finding: the three collapse
+onto a common shape with mutual RMS spread `~0.07`, about `3x` closer to one
+another than the `sqrt(tau)` null sits to them. This is a shared shape distinct
+from diffusion, but a **loose** one.
+
+Four honest limits, all reported by the script rather than suppressed:
+
+1. Refining the grid (section 10c) *weakens* the collapse, since finer resolution
+   exposes real small-`tau` shape differences that coarse binning hides.
+2. The revocable arm is **not** resolved from the free-token master on Wikipedia's
+   mild toppling (`0.9x` the mutual spread).
+3. On the calibration-dependent arm the real domains sit `7.7`-`9.8x` the internal
+   spread off the simulated master, while the `sqrt(tau)` null sits **closer**, at
+   `4.1x`. The direction is unfavourable, which is why the data-derived collapse is
+   the honest test and the one reported, but reporting only the mutual spread would
+   conceal it.
+4. The heterogeneity null, which the simulation (10a) separates cleanly, is **not**
+   separated by the real data: the real master sits `~0.03` from it, nearer than the
+   three domains sit to one another. That null carries a free parameter the
+   amplifier family does not, so this is not a like-for-like defeat, but it is an
+   alternative this test does not exclude.
+
+With only three domains one cannot yet tell a power problem (too few, too
+heterogeneously clocked) from a substantive limit (the "one exact curve" claim
+being too strong); only adding domains separates them.
 
 ### 10c. Fine-grid re-extraction (`refine_grids.py`)
 
@@ -386,36 +447,51 @@ the paper separates:
   non-amplified handle on capability, returning a **manufactured share**
   `R = 1 - corr^2(final order, k-hat)`.
 
-**Data & channel.** Online chess supplies all three ingredients at once: a
-near-homogeneous start (entrants seeded near a common provisional rating), a
-genuine amplifier (rating amplified and revocable game by game), and an exogenous
-`k-hat` (each player's *converged* rating months later, a different sampling that
-averages the early fluctuation away). Three monthly Lichess dumps are streamed via
-`zstd`: `2013-01` (entry cohort), `2013-07`, `2013-12` (+6/+12-month `k-hat`).
+**Data & channel.** Online chess supplies a start that *looks* homogeneous
+(entrants seeded near a common provisional rating), a plausible amplifier (rating
+amplified and revocable game by game), and an exogenous `k-hat` (each player's
+*converged* rating months later, a different sampling that averages the early
+fluctuation away). The first two are less than they appear; the third is what
+makes the lesson visible. Three monthly Lichess dumps are streamed via `zstd`:
+`2013-01` (entry cohort), `2013-07`, `2013-12` (+6/+12-month `k-hat`).
 
 **Algorithm.**
 ```
 for each player in 2013-01 with >= 30 games:
-    entry_elo   = rating at first game        # near-equal seed in the narrow band
+    entry_elo   = rating at first game        # near-equal ESTIMATE, not near-equal skill
     monthend_elo = rating at last game        # the order that "forms" during the month
 for the +6 and +12 month dumps:
     k_hat[player] = mean rating that month, for players with >= 20 games there
-for band in {near-equal 1480-1520, control 1000-2200}:
+for band in {near-equal-rated 1480-1520, control 1000-2200}:
+    sd(entry_elo), sd(monthend_elo)   # entry-band diagnostic: was the band ever equal?
     corr(entry_elo,    k_hat)   # does the seed predict true skill?
     corr(monthend_elo, k_hat)   # does the formed order predict true skill?
     R = 1 - corr(monthend_elo, k_hat)^2
 ```
 
-**Result (Table `tab:lichess`).** In the near-equal cohort the month-end order is
-decoupled from the entry seed (`corr = -0.03`) with super-diffusive lock-in, so it
-*looks* manufactured (signature A), yet it predicts converged skill at `0.77`, so
-`R ~ 0.40`. Because measurement error in `k-hat` attenuates the correlation, that
-`0.40` is an **upper bound** on manufacture, so at least about `60%` is revealed
-skill. The heterogeneous control is skill-dominated already at entry
+**The band is not what its name suggests.** A 40-point band makes the entry
+*estimate* narrow, not capability: Lichess seeds newcomers near 1500 precisely
+because it does not know them yet, so the band selects players the system has not
+yet told apart. The `Entry-band diagnostic` prints the evidence: the band's
+month-end s.d. is `213.1` against the control's `211.4` and the whole active
+population's `212.1`, i.e. the two bands share the same underlying `Var(ln k)` and
+differ only in how much of it was visible at entry. Hence the naming
+`near-equal-rated`, not `near-equal`.
+
+**Result (Table `tab:lichess`).** The month-end order is decoupled from the entry
+seed (`corr = -0.03`) and locks in faster than `sqrt(tau)`, so it *looks*
+manufactured, yet it predicts converged skill at `0.77`, so `R ~ 0.40`. Because
+measurement error in `k-hat` attenuates the correlation, that `0.40` is an **upper
+bound** on manufacture, so at least about `60%` is revealed skill. The
+heterogeneous control is skill-dominated already at entry
 (`corr(entry, k-hat) = 0.71`). The example does not show chess hierarchies are
-manufactured. It shows the opposite, and that is the methodological point. A was
-right about the dynamics and silent, as it must be, about the seed. There is no
-randomness; the result is deterministic given the dumps.
+manufactured. It shows the opposite, and that is the methodological point, twice
+over: the trajectory was silent about the seed (B), as it must be, and **not
+entitled to its verdict on the dynamics (A) either**, since a 40-point band
+produces the entry decoupling whatever the dynamics and an unequal population
+produces the lock-in at `g=0` (section 1, `rho` with a heterogeneous drift). One
+exogenous channel corrects both errors. There is no randomness; the result is
+deterministic given the dumps.
 
 ### Data provenance and integrity
 

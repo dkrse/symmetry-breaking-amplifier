@@ -253,9 +253,13 @@ flowchart TD
     D --> E["master = mean; internal spread = RMS about master"]
     F["diffusion (sqrt tau)"] --> G["rescale same way"]
     H["preferential attachment"] --> G
+    HET["heterogeneity: g=0, unequal drift<br/>(the null magnitude cannot reject)"] --> G
     G --> I{"distance to master"}
     E --> I
-    I --> J["family internal ~0.01<br/>DIFF & PA 7-15x off, on all 8 seeds<br/>→ collapse HOLDS, separates amp from PA by SHAPE"]
+    I --> J["family internal ~0.01<br/>DIFF 7x, HET 10x, PA 12x off, on all 8 seeds"]
+    J --> K["collapse HOLDS: separates amp from PA<br/>AND from mere inequality, by SHAPE"]
+    HET --> L["its own internal spread ~0.13:<br/>heterogeneity does NOT collapse<br/>(each Var_a traces a different shape)"]
+    style HET fill:#fff4e8,stroke:#ea580c
 ```
 
 ---
@@ -271,10 +275,43 @@ flowchart TD
     R1 & R2 & R3 & R4 --> RS["rescale each by its own tau90 → common u-grid"]
     RS --> M1{"collapse onto SIMULATED master?"}
     M1 --> F1["FAILS: real curves lock in harder<br/>(sim master is calibration-dependent)"]
+    M1 --> F1b["and unfavourably: real domains 7.7-9.8x off,<br/>while the sqrt null sits CLOSER, at 4.1x"]
     RS --> M2["data-derived free-token master (3 domains)"]
     M2 --> F2["mutual spread ~0.07<br/>sqrt null 3x off → shared shape ≠ diffusion, but LOOSE"]
     M2 --> F3["revocable arm NOT resolved (mild Wikipedia toppling)"]
+    M2 --> F4["heterogeneity null sits ~0.03 away:<br/>NEARER than the domains are to each other<br/>→ collapse does NOT exclude mere inequality<br/>(that null has a free parameter; not like-for-like)"]
     F2 --> C["caveat: finer grid WEAKENS collapse;<br/>n=3 cannot separate 'too few data' from 'claim too strong'"]
+    style F1b fill:#ffe8e8,stroke:#dc2626
+    style F4 fill:#ffe8e8,stroke:#dc2626
+```
+
+---
+
+## Non-identifiability worked example (`lichess_worked_example.py`, `--lichess`)
+
+The boundary between A and B on real data. Note that BOTH trajectory appearances
+fail here; only the exogenous channel settles anything.
+
+```mermaid
+flowchart TD
+    A["Lichess 2013-01: players with >= 30 games"] --> B["entry Elo = first game<br/>month-end Elo = last game"]
+    B --> C{"entry band"}
+    C -->|"1480-1520"| D["near-equal-RATED<br/>(equal ESTIMATE, not equal skill)"]
+    C -->|"1000-2200"| E["heterogeneous control"]
+    D --> F["appearance 1: corr(entry, month-end) = -0.03<br/>'order decoupled from the start'"]
+    D --> G["appearance 2: lock-in faster than sqrt(tau)<br/>'signature A present'"]
+    F --> H["BUT: a 40-point band produces this<br/>whatever the dynamics (range restriction)"]
+    G --> I["BUT: an unequal population produces this<br/>at g=0, no amplification at all"]
+    D --> J["DIAGNOSTIC: sd entry 5.3 → sd end 213.1<br/>control 211.4 | population 212.1"]
+    J --> K["the band was never equal in capability:<br/>symmetry was in the MEASUREMENT"]
+    H & I & K --> L["trajectory settles NEITHER A nor B"]
+    M["2013-07 / 2013-12: k-hat<br/>= mean rating, >= 20 games there"] --> N["corr(month-end, k-hat) = 0.77<br/>corr(entry, k-hat) = -0.08"]
+    N --> O["R = 1 − 0.77² ≈ 0.40<br/>UPPER bound (k-hat error attenuates)"]
+    O --> P["≥ 60% REVEALED skill:<br/>one exogenous channel corrects both errors"]
+    L --> P
+    style L fill:#ffe8e8,stroke:#dc2626,stroke-width:2px
+    style P fill:#e8ffe8,stroke:#16a34a,stroke-width:2px
+    style J fill:#fff4e8,stroke:#ea580c
 ```
 
 ---

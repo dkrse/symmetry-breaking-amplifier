@@ -5,11 +5,19 @@ lichess_worked_example.py
 Reproduces Section "Worked example: manufacture versus revelation in online chess"
 (Table tab:lichess) of the paper.
 
-The point: a near-equal online-chess cohort develops an order that looks
-*manufactured* (decoupled from the entry rating, super-diffusive early-lead
-lock-in -- signature A). Admitting an exogenous, non-amplified estimate of
-capability k-hat -- each player's CONVERGED rating months later -- shows the
-order is mostly *revealed* skill, giving a manufactured share
+The point: a cohort whose ENTRY RATINGS are near-equal develops an order that
+*looks* manufactured (decoupled from the entry rating, early-lead lock-in faster
+than the sqrt(tau) law). Neither appearance survives inspection: the entry
+decoupling is what restricting entry to a 40-point band produces whatever the
+dynamics, and the lock-in is what a heterogeneous population produces at g=0 with
+no amplification at all (paper Eq. rhodrift). Watch `sd end` below: the band
+equalises the entry ESTIMATE, not capability, and one month of play reveals the
+cohort to be as dispersed as the whole population. So the trajectory settles
+neither A nor B here.
+
+What does settle B is an exogenous, non-amplified estimate of capability k-hat,
+each player's CONVERGED rating months later, which shows the order is mostly
+*revealed* skill, giving a manufactured share
 
         R = 1 - corr^2(month-end order, k-hat)   (Eq. Rshare)
 
@@ -43,8 +51,13 @@ BASE = "https://database.lichess.org/standard/lichess_db_standard_rated_{}.pgn.z
 COHORT_MONTH = "2013-01"
 REF_MONTHS = [("2013-07", "+6mo"), ("2013-12", "+12mo")]
 
-# entry-Elo bands: near-equal (small Var(ln k)) vs heterogeneous control
-BANDS = [("near-equal", 1480, 1520), ("control", 1000, 2200)]
+# Entry-Elo bands. NOTE the naming: "near-equal-rated", not "near-equal". A narrow
+# band means small Var of the ENTRY ESTIMATE, NOT small Var(ln k): Lichess seeds
+# newcomers near 1500 precisely because it does not know them yet, so the band
+# selects players the system has not yet told apart, not players who do not
+# differ. The month-end s.d. printed below (213 vs the control's 211) shows the
+# two bands share the same underlying capability dispersion.
+BANDS = [("near-equal-rated", 1480, 1520), ("control", 1000, 2200)]
 
 MIN_COHORT_GAMES = 30   # activity filter in the entry month
 MIN_REF_GAMES = 20      # games required later so k-hat has converged
@@ -147,10 +160,29 @@ def main():
     conv = {ref: converged_elo(ensure_dump(ref, args.cache_dir), everyone)
             for ref, _ in REF_MONTHS}
 
+    # --- diagnostic: is the "near-equal-rated" band actually near-equal? ---
+    # Measured on the FULL band (before the convergence filter), as the paper
+    # reports its entry s.d. If the band were near-equal in CAPABILITY, its
+    # month-end spread would stay well below the heterogeneous control's. It does
+    # not: it lands on it, and on the whole active population's. The symmetry was
+    # in the measurement, not in the players.
+    active = [p for p in byp if len(byp[p]) >= MIN_COHORT_GAMES]
+    pop_end_sd = np.std([byp[p][-1][1] for p in active])
+    print(f"\nEntry-band diagnostic (full bands, {len(active)} active players)")
+    print(f"{'band':18} {'n':>5} {'sd entry':>9} {'sd end':>8} {'ratio':>7}")
+    for name, lo, hi in BANDS:
+        pl = bands[name]
+        e = np.std([byp[p][0][1] for p in pl])
+        f = np.std([byp[p][-1][1] for p in pl])
+        print(f"{name:18} {len(pl):>5} {e:>9.1f} {f:>8.1f} {f/max(e,1e-9):>6.1f}x")
+    print(f"{'whole population':18} {len(active):>5} {'':>9} {pop_end_sd:>8.1f}")
+    print("  ^ the narrow band's month-end spread lands on the population's:")
+    print("    the band equalised the ESTIMATE, not capability (Var(ln k) is NOT small).")
+
     print(f"\nLichess worked example  (cohort {COHORT_MONTH})")
-    print(f"{'cohort':12} {'band':11} {'ref':6} {'n':>4}  "
+    print(f"{'cohort':18} {'band':11} {'ref':6} {'n':>4}  "
           f"{'corr(entry,k)':>13} {'corr(end,k)':>11}  {'R':>5}")
-    print("-" * 70)
+    print("-" * 76)
 
     rows = []
     for name, lo, hi in BANDS:
@@ -160,7 +192,7 @@ def main():
             kmap = {p: v[0] for p, v in conv[ref].items() if v[1] >= MIN_REF_GAMES}
             keep = [p for p in players if p in kmap]
             if len(keep) < 25:
-                print(f"{name:12} {lo}-{hi:<6} {tag:6} {len(keep):>4}  (too few) ")
+                print(f"{name:18} {lo}-{hi:<6} {tag:6} {len(keep):>4}  (too few) ")
                 continue
             entry = np.array([byp[p][0][1] for p in keep])
             end = np.array([byp[p][-1][1] for p in keep])
@@ -168,15 +200,15 @@ def main():
             c_entry = spearmanr(entry, khat).statistic
             c_end = spearmanr(end, khat).statistic
             R = 1.0 - c_end ** 2
-            print(f"{name:12} {lo}-{hi:<6} {tag:6} {len(keep):>4}  "
+            print(f"{name:18} {lo}-{hi:<6} {tag:6} {len(keep):>4}  "
                   f"{c_entry:>13.2f} {c_end:>11.2f}  {R:>5.2f}")
             rows.append((name, f"{lo}-{hi}", tag, len(keep),
                          round(c_entry, 2), round(c_end, 2), round(R, 2), round(entry_sd, 1)))
 
-    # headline number: near-equal, +6mo
+    # headline number: near-equal-rated, +6mo
     for r in rows:
-        if r[0] == "near-equal" and r[2] == "+6mo":
-            print(f"\nHeadline: near-equal cohort, +6mo -> "
+        if r[0] == "near-equal-rated" and r[2] == "+6mo":
+            print(f"\nHeadline: near-equal-RATED cohort, +6mo -> "
                   f"corr(entry,k)={r[4]}, corr(end,k)={r[5]}, R={r[6]} "
                   f"(entry Elo sd={r[7]}); ~{round((1-r[6])*100)}% revealed.")
     return rows
