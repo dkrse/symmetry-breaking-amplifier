@@ -131,11 +131,29 @@ def tau90(rhos):
     return float(TAUS[hit[0]]) if len(hit) else float("nan")
 
 
+def bootstrap_contrast(net_cols, supp_cols, n_boot=2000, seed=0):
+    """Bootstrap (resampling elections with replacement) the free-token minus
+    revocable contrast: the rho gap at each tau and the tau_90 difference."""
+    rng = np.random.default_rng(seed)
+    n = net_cols.shape[0]
+    gaps = np.empty((n_boot, len(TAUS)))
+    d90 = np.empty(n_boot)
+    for b in range(n_boot):
+        idx = rng.integers(0, n, n)
+        rn = rho_curve(net_cols[idx])
+        rs = rho_curve(supp_cols[idx])
+        gaps[b] = rs - rn
+        d90[b] = tau90(rn) - tau90(rs)
+    return gaps, d90
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--min-votes", type=int, default=25,
                     help="minimum votes for an election to enter the cohort")
+    ap.add_argument("--bootstrap", type=int, default=0, metavar="B",
+                    help="bootstrap replicates for the contrast CI (0 = skip)")
     ap.add_argument("--out-fig", default=str(ROOT / "output/figures/early_lead_wiki_rfa.png"))
     ap.add_argument("--out-csv", default=str(ROOT / "output/wiki_rfa_earlylead.csv"))
     args = ap.parse_args()
@@ -169,6 +187,17 @@ def main():
     i_early = TAUS <= 0.15
     print(f"mean early (tau<=0.15) persistence:  "
           f"net={rho_net[i_early].mean():.3f}   support-only={rho_supp[i_early].mean():.3f}")
+    if args.bootstrap:
+        gaps, d90 = bootstrap_contrast(net_cols, supp_cols, n_boot=args.bootstrap)
+        lo, hi = np.percentile(gaps, [2.5, 97.5], axis=0)
+        print(f"\nbootstrap over elections (B={args.bootstrap}), free-token "
+              f"minus revocable gap rho_supp(tau) - rho_net(tau), 95% CI:")
+        for j, t in enumerate(TAUS):
+            print(f"  tau={t:>5.3f}:  gap={gaps[:, j].mean():+.3f}  "
+                  f"[{lo[j]:+.3f}, {hi[j]:+.3f}]")
+        l9, h9 = np.percentile(d90, [2.5, 97.5])
+        print(f"  tau_90(net) - tau_90(support-only): mean={d90.mean():+.3f}  "
+              f"[{l9:+.3f}, {h9:+.3f}]")
     print("Prediction: net << support-only early, and tau_90(net) larger -- the "
           "same community process is far less early-determined when a lead can be "
           "toppled by opposition than when only endorsements accumulate. This is "

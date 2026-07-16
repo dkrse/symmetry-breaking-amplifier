@@ -142,6 +142,9 @@ def main():
     ap = argparse.ArgumentParser()
     # default assumes cwd = scripts/ (as run_all.sh invokes it); absolute paths ok too
     ap.add_argument("--cache-dir", default="data/lichess")
+    ap.add_argument("--bootstrap", type=int, default=0, metavar="B",
+                    help="bootstrap replicates (resampling players) for CIs on "
+                         "corr(end,k) and R (0 = skip)")
     args = ap.parse_args()
     os.makedirs(args.cache_dir, exist_ok=True)
 
@@ -200,8 +203,21 @@ def main():
             c_entry = spearmanr(entry, khat).statistic
             c_end = spearmanr(end, khat).statistic
             R = 1.0 - c_end ** 2
+            ci = ""
+            if args.bootstrap:
+                rng = np.random.default_rng(0)
+                n = len(keep)
+                cb = np.empty(args.bootstrap)
+                for b in range(args.bootstrap):
+                    i = rng.integers(0, n, n)
+                    cb[b] = spearmanr(end[i], khat[i]).statistic
+                clo, chi = np.percentile(cb, [2.5, 97.5])
+                rb = 1.0 - cb ** 2
+                rlo, rhi = np.percentile(rb, [2.5, 97.5])
+                ci = (f"  corr CI[{clo:.2f},{chi:.2f}]"
+                      f"  R CI[{rlo:.2f},{rhi:.2f}]")
             print(f"{name:18} {lo}-{hi:<6} {tag:6} {len(keep):>4}  "
-                  f"{c_entry:>13.2f} {c_end:>11.2f}  {R:>5.2f}")
+                  f"{c_entry:>13.2f} {c_end:>11.2f}  {R:>5.2f}{ci}")
             rows.append((name, f"{lo}-{hi}", tag, len(keep),
                          round(c_entry, 2), round(c_end, 2), round(R, 2), round(entry_sd, 1)))
 

@@ -226,6 +226,7 @@ flowchart TD
     D --> F["rho_net(tau) across elections"]
     E --> G["rho_supp(tau) across elections"]
     F & G --> H["prediction: rho_net << rho_supp early,<br/>tau90(net)→1 (lead can be toppled)"]
+    H --> I["--bootstrap B: resample elections →<br/>gap(0.1)=0.11 [0.09,0.13], Δtau90=0.245 [0.20,0.28]"]
 ```
 
 ---
@@ -305,8 +306,8 @@ flowchart TD
     D --> J["DIAGNOSTIC: sd entry 5.3 → sd end 213.1<br/>control 211.4 | population 212.1"]
     J --> K["the band was never equal in capability:<br/>symmetry was in the MEASUREMENT"]
     H & I & K --> L["trajectory settles NEITHER A nor B"]
-    M["2013-07 / 2013-12: k-hat<br/>= mean rating, >= 20 games there"] --> N["corr(month-end, k-hat) = 0.77<br/>corr(entry, k-hat) = -0.08"]
-    N --> O["R = 1 − 0.77² ≈ 0.40<br/>UPPER bound (k-hat error attenuates)"]
+    M["2013-07 / 2013-12: k-hat<br/>= mean rating, >= 20 games there"] --> N["corr(month-end, k-hat) = 0.77 [0.68,0.85]<br/>corr(entry, k-hat) = -0.08<br/>(CI: --bootstrap 2000, resampling players)"]
+    N --> O["R = 1 − 0.77² ≈ 0.40 [0.28,0.54]<br/>UPPER bound (k-hat error attenuates)"]
     O --> P["≥ 60% REVEALED skill:<br/>one exogenous channel corrects both errors"]
     L --> P
     style L fill:#ffe8e8,stroke:#dc2626,stroke-width:2px

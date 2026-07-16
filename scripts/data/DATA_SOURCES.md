@@ -60,7 +60,8 @@ All paths below are relative to this directory (`scripts/data/`).
 
 ## 4. Music Lab (Salganik–Dodds–Watts artificial cultural market) — `musiclab/`
 
-- **Source:** Princeton dataset release (Salganik, 2026), DOI `10.34770/y56c-ym90`.
+- **Source:** Princeton dataset release (Salganik, 2026, *Success and Failure in
+  Cultural Markets*), DOI `10.34770/y56c-ym90`.
 - **URL:** <https://doi.org/10.34770/y56c-ym90>
 - **Citation:** Salganik, Dodds & Watts (2006), *Science* 311:854–856.
 - **Files used:** `musiclab/musiclab_data/downloads_v{1,2,3,4}_lexorder.txt`

@@ -313,6 +313,11 @@ sequence record both positions. Treating elections as the cohort,
 (`tau90 = 0.375` net vs `0.10` support-only). The same community process is far less
 early-determined when a lead can be toppled.
 
+**Inference (`--bootstrap B`).** Resampling elections with replacement puts a
+95% CI on the contrast: the free-token-minus-revocable gap at `tau = 0.1` is
+`0.11 [0.09, 0.13]`, positive with zero excluded at every `tau < 1`, and the
+`tau90` difference is `0.245 [0.20, 0.28]` (`B = 2000`, seeded).
+
 ## 9. Design 2 real data, free-token arm (`github_earlylead.py`, `--online`)
 
 GitHub repository stars: a **free token** (no per-unit ceiling, no toppling).
@@ -442,8 +447,8 @@ the paper separates:
 - **B (the seed)**, whether what got inflated was capability or position, skill or
   amplified noise, is **not**. The non-identifiability theorem says the map
   carries capability `k` and position `p` only through their sum `a = k + p`, and
-  weights an early fluctuation almost like an inherited head start, so no
-  trajectory statistic recovers the split. Recovering B needs an exogenous,
+  carries an early fluctuation and an inherited (latent) head start through one
+  identical term, so no trajectory statistic recovers the split. Recovering B needs an exogenous,
   non-amplified handle on capability, returning a **manufactured share**
   `R = 1 - corr^2(final order, k-hat)`.
 
@@ -490,8 +495,10 @@ over: the trajectory was silent about the seed (B), as it must be, and **not
 entitled to its verdict on the dynamics (A) either**, since a 40-point band
 produces the entry decoupling whatever the dynamics and an unequal population
 produces the lock-in at `g=0` (section 1, `rho` with a heterogeneous drift). One
-exogenous channel corrects both errors. There is no randomness; the result is
-deterministic given the dumps.
+exogenous channel corrects both errors. The headline analysis has no randomness
+and is deterministic given the dumps; `--bootstrap B` adds seeded
+player-resampling CIs (`corr(month-end, k-hat) = 0.77 [0.68, 0.85]`,
+`R = 0.40 [0.28, 0.54]` at `B = 2000`).
 
 ### Data provenance and integrity
 

@@ -35,9 +35,9 @@ explicit failure condition:
 **B. The seed is *not* identifiable.** Whether what got inflated was capability
 or position, real skill or amplified noise, is **not** recoverable from a
 trajectory. This is the central new result, a **non-identifiability theorem**. The
-map carries capability and position only through their *sum*, and weights a lucky
-early draw almost like an inherited head start, so no statistic of the motion
-recovers the split. The statement that the amplifier keeps no signature of what it
+map carries capability and position only through their *sum*, and carries a lucky
+early draw and an inherited head start through one identical term, so no statistic
+of the motion recovers the split. The statement that the amplifier keeps no signature of what it
 amplified is therefore a theorem rather than a metaphor, and cannot be refuted by
 data. Recovering B needs an **exogenous, non-amplified handle on capability**
 (quality fixed by construction, randomised, or a convergent later estimate), which
@@ -118,7 +118,10 @@ heterogeneity inflates on both arms alike and so cannot manufacture:
   contested, revocable status: the model predicts persistence *collapses* toward
   the diffusion regime, because opposition can topple an early front-runner. The
   script measures both arms inside the one RfA dataset (net support = revocable;
-  support-only cumulative = free-token reference).
+  support-only cumulative = free-token reference). `--bootstrap 2000` resamples
+  elections and puts a 95% CI on the contrast (gap at `tau=0.1`:
+  `0.11 [0.09, 0.13]`; `tau90` difference `0.245 [0.20, 0.28]`; zero excluded at
+  every `tau < 1`).
 
 ### GitHub token
 
@@ -166,7 +169,9 @@ and a heterogeneous control (1000–2200), and prints `Table tab:lichess`:
   and the lock-in is what an unequal population produces at zero gain. Neither
   signature identifies A here.
 - **The convergent channel settles B.** The month-end order predicts converged
-  skill at `0.77`, so `R = 1 - 0.77^2 ~ 0.40`, an *upper* bound on manufacture
+  skill at `0.77` (95% bootstrap CI `[0.68, 0.85]` over players,
+  `--bootstrap 2000`), so `R = 1 - 0.77^2 ~ 0.40` (CI `[0.28, 0.54]`), an
+  *upper* bound on manufacture
   (measurement error in `k-hat` attenuates the correlation), so at least about
   `60%` is revealed skill. The example does not show chess hierarchies are
   manufactured. It shows the opposite, and that is the point: what looked like an
