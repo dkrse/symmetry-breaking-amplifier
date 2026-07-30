@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 """
 Path (b): synthetic validation of the early-lead-persistence discriminator.
 
@@ -19,12 +20,14 @@ Four processes, common cohort of N entities, T steps, near-homogeneous start:
 We report rho(tau) for each and tau_90 (smallest tau with rho>=0.9).
 """
 
+
 import numpy as np
 from scipy.stats import spearmanr
 
 RNG = np.random.default_rng(20260709)
 N = 3000          # entities in the cohort
 T = 300           # horizon (steps)
+
 TAUS = np.array([0.01, 0.02, 0.05, 0.1, 0.2, 0.375, 0.5, 0.75, 1.0])
 
 
@@ -44,6 +47,7 @@ def rho_tau(traj):
 def tau90(rhos):
     hit = np.where(rhos >= 0.9)[0]
     return TAUS[hit[0]] if len(hit) else np.nan
+
 
 
 
@@ -156,6 +160,7 @@ def tau90_over_seeds(simfn, seeds=range(1, 9), **kw):
 
 
 print("\n=== multi-seed tau90 (8 seeds): median [min,max] ===")
+
 for label, fn, kw in [("AMP free-token", sim_amp, dict(g=0.2)),
                       ("PA  Barabasi",   sim_pa,  dict()),
                       ("TOP amp+renewal",sim_top, dict(g=0.2, p_reset=0.02))]:

@@ -27,11 +27,15 @@ token (download counts, followers, money-as-number) has no built-in ceiling and
 runs away until some EXTERNAL limit binds -- which is exactly why the optimal-gain
 downturn failed to appear in the download-market test (paper Section 'empirical').
 """
+
+
 import numpy as np
 
 def gini(x):
     x = np.sort(np.asarray(x, float)); n = len(x); c = np.cumsum(x)
     return float((n + 1 - 2 * np.sum(c) / c[-1]) / n)
+
+
 
 def run(N=300, D=1.0, g=4.0, T=250, mutual=True, seed=0):
     """Each agent gives budget D, preferring high-status recipients (gain g).
@@ -48,6 +52,9 @@ def run(N=300, D=1.0, g=4.0, T=250, mutual=True, seed=0):
         S = np.maximum(S, 1e-9)
 
     return S
+
+
+
 
 if __name__ == "__main__":
     print("PART 2 -- does a per-agent ceiling EMERGE? (D=1, strong preferential g=4)")
@@ -67,3 +74,4 @@ if __name__ == "__main__":
     for g in (1, 2, 4, 8, 16):
         S = run(g=g, D=1.0, mutual=True)
         print(f"    g={g:<3} S*/D={S.max():.3f}")
+

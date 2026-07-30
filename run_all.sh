@@ -5,10 +5,12 @@
 # It bootstraps a local virtual environment (.venv) from requirements.txt and
 # runs the analysis scripts in scripts/. By default it runs the fast OFFLINE
 # reproduction (pure simulations + bundled Music Lab data), which regenerates
-# every figure and prints every headline number in ~1-2 minutes.
+# every figure and prints every headline number in well under a minute.
 # No analysis script touches the network; only the one-off pip bootstrap does.
 # Two opt-in tiers add slower or networked work:
-#   --power    also run the Monte-Carlo power analysis (offline, several minutes)
+#   --power    also run the heavy offline passes: the Monte-Carlo power analysis,
+#              the dense-grid g*(T) horizon-scaling fit, and the Kesten tail-index
+#              check (all offline; ~22 min, dominated by the Kesten check)
 #   --online   also run the Design 2 real-data passes: Wikipedia RfA (toppling
 #              arm, downloads SNAP data) and, if GITHUB_TOKEN is set, GitHub
 #              stars (free-token arm)
@@ -18,7 +20,7 @@
 #
 # Usage:
 #   ./run_all.sh                   # fast offline reproduction (figures + numbers)
-#   ./run_all.sh --power           # + Monte-Carlo power analysis (slow, offline)
+#   ./run_all.sh --power           # + power analysis, g*(T) fit, Kesten tail (slow, offline)
 #   ./run_all.sh --online          # + Wikipedia RfA + GitHub stars (Design 2)
 #   ./run_all.sh --lichess         # + Lichess non-identifiability worked example
 #   ./run_all.sh --power --online --lichess  # everything
@@ -56,12 +58,18 @@ echo ">> installing dependencies from requirements.txt"
 "$VENV/bin/pip" install -q -r "$ROOT/requirements.txt"
 echo ">> using $("$PY" --version) with $("$PY" -c 'import numpy,scipy,matplotlib;print("numpy",numpy.__version__,"scipy",scipy.__version__,"matplotlib",matplotlib.__version__)')"
 
+# Wall-clock per script, so a run always reports how long each stage took and the
+# README's estimates can be checked rather than trusted.
+T0_ALL=$SECONDS
 run() {
   echo
   echo "=================================================================="
   echo ">> $1"
   echo "=================================================================="
-  ( cd "$SCRIPTS" && "$PY" "$1" )
+  local t0=$SECONDS
+  ( cd "$SCRIPTS" && "$PY" "$@" )
+  local dt=$(( SECONDS - t0 ))
+  printf '<< %s finished in %dm %02ds\n' "$1" $(( dt / 60 )) $(( dt % 60 ))
 }
 
 # ---- 1b. data integrity check (provenance + hashes in scripts/data/) ------
@@ -107,21 +115,26 @@ run critical_threshold.py    # lower absorbing barrier: buffer decouples outcome
 run regulation.py            # emergent ceiling S*/D = 1
 run musiclab_analysis.py     # Design 1 (causal decoupling) on bundled Music Lab data
 
-# ---- 3. slow Monte-Carlo power analysis (offline, opt-in) ------------------
+# ---- 3. slow offline heavy passes (Monte-Carlo + long simulations, opt-in) --
 if [ "$POWER" -eq 1 ]; then
   echo
-  echo "### POWER analysis: Monte-Carlo (offline, several minutes)"
+  echo "### HEAVY offline passes: Monte-Carlo and long simulations (~22 min)"
   run power_analysis.py        # Design 1 & 2 power analysis
+  run optimal_gain_fit.py      # dense-grid fit of the g*(T) horizon scaling (~1 min)
+  run kesten_tail.py           # Kesten tail index: Cramer root vs Hill (~15 min)
 else
   echo
-  echo ">> skipping Monte-Carlo power analysis (offline but slow); use --power to include it"
+  echo ">> skipping heavy offline passes (power analysis, g*(T) fit, Kesten tail);"
+  echo "   use --power to include them"
 fi
 
 # ---- 4. online passes (Design 2, real data) -------------------------------
 if [ "$ONLINE" -eq 1 ]; then
   echo
   echo "### ONLINE passes: Design 2 early-lead persistence on real data"
-  run wiki_rfa_toppling.py     # toppling arm: Wikipedia RfA (downloads SNAP data)
+  # --bootstrap reproduces the CIs on the free-token-minus-revocable gap quoted
+  # in the text; the script downloads the SNAP data if it is not bundled.
+  run wiki_rfa_toppling.py --bootstrap 2000
   if [ -n "${GITHUB_TOKEN:-}" ]; then
     run github_earlylead.py    # free-token arm: GitHub stars (needs GITHUB_TOKEN)
   else
@@ -143,7 +156,9 @@ if [ "$LICHESS" -eq 1 ]; then
   if ! command -v zstd >/dev/null 2>&1; then
     echo ">> skipping: the 'zstd' CLI is required to stream the PGN dumps (apt install zstd)"
   else
-    run lichess_worked_example.py   # downloads ~150MB of monthly dumps once, caches under scripts/data/lichess
+    # --bootstrap/--survivorship reproduce the CIs and the selection sweep in
+    # Table tab:lichess and its caveat paragraph.
+    run lichess_worked_example.py --bootstrap 2000 --survivorship
   fi
 else
   echo
@@ -151,4 +166,5 @@ else
 fi
 
 echo
-echo ">> done. Figures written to output/figures/"
+printf '>> done in %dm %02ds. Figures written to output/figures/\n' \
+  $(( (SECONDS - T0_ALL) / 60 )) $(( (SECONDS - T0_ALL) % 60 ))

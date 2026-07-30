@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 """
 Design 2 on real GitHub data: early-lead persistence of repository star stock.
 
@@ -41,6 +42,8 @@ Notes / limits:
   * Repos created in the same window all start at 0 stars => the homogeneous
     start the model assumes; the baseline is sqrt(tau), not zero.
 """
+
+
 import argparse
 import json
 import os
@@ -52,6 +55,7 @@ from pathlib import Path
 import numpy as np
 import requests
 from scipy.stats import spearmanr
+
 
 API = "https://api.github.com"
 GQL = "https://api.github.com/graphql"
@@ -215,6 +219,7 @@ def star_times(full_name, horizon_end, cache_dir):
     return sorted(times)
 
 
+
 def cumulative_at_taus(created_at, star_dts, horizon_months, taus):
     """Cumulative star count at each tau-fraction of the horizon."""
     t0 = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
@@ -358,6 +363,7 @@ def main():
         for name, c in zip(kept, counts):
             fh.write(name + "," + ",".join(str(int(v)) for v in c) + "\n")
 
+
     # figure
     import matplotlib
     matplotlib.use("Agg")
@@ -376,6 +382,7 @@ def main():
     fig.savefig(args.out_fig, dpi=150)
 
     print(f"\nwrote {args.out_fig}\nwrote {args.out_csv}")
+
 
 
 if __name__ == "__main__":

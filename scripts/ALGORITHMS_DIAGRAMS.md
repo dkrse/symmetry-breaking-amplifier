@@ -15,7 +15,7 @@ flowchart TD
     B --> C["noise: x += Normal(0, sigma)"]
     C --> D{"reset active?"}
     D -- no --> E["return x"]
-    D -- yes --> F["hazard hz = p_hi · logistic(ln S − ln S_crit)"]
+    D -- yes --> F["hazard hz = p_hi · logistic(ln S − ln S_top)<br/>(dominance-triggered, NOT constant-rate)"]
     F --> G["toppled = rand < hz"]
     G --> H["x[toppled] = Normal(0, sigma)  (back to floor)"]
     H --> E
@@ -47,9 +47,43 @@ flowchart LR
     B --> C{"t* vs horizon T"}
     C -->|"t* > T (under)"| D["D rises with g"]
     C -->|"t* < T (over)"| E["D falls with g"]
-    C -->|"t* = T (crossover)"| F["g* ~ 1/(theta·S0·T)"]
-    F --> G["optimal_gain_scan:<br/>peak of A(g) at T=150,300,600,1200<br/>check 1/T scaling"]
+    C -->|"t* = T (crossover)"| F["mean-field estimate<br/>g* ~ 1/(theta·S0·T)"]
+    F --> G["optimal_gain_fit.py: dense grid, sub-grid peak,<br/>T = 150…2400, 3 seeds"]
+    G --> H["MEASURED g* ~ T^-0.56 ± 0.02<br/>(T>=600: -0.44, further from 1)"]
+    H --> I["direction right, exponent WRONG:<br/>only the non-monotonicity is claimed"]
+    style I fill:#ffe8e8,stroke:#dc2626,stroke-width:2px
 ```
+
+---
+
+## Kesten tail index (`kesten_tail.py`)
+
+```mermaid
+flowchart TD
+    A["saturated regime: f(S) → theta·S*"] --> B["per-step multiplier<br/>M = exp(c + eta), c = ln(1 + g·theta·S*)"]
+    B --> C["hazard saturates at p_hi, renews at the floor<br/>= multiplicative growth + geometric killing"]
+    C --> D["Cramer condition (1 − p_hi)·E[M^mu] = 1"]
+    D --> E["mu = (−c + sqrt(c² − 2·sigma²·ln(1−p_hi))) / sigma²<br/>→ −ln(1−p_hi)/c  for sigma² << c"]
+    E --> F["CONTESTABILITY SETS THE TAIL"]
+    E --> G["check: Hill estimator on the FULL nonlinear<br/>dynamics, 3 gains × 6 toppling rates"]
+    G --> H["mu <~ 2: mean error 3.1%, worst 8.9%<br/>mu > 2: Hill biased low (threshold not asymptotic)"]
+    E --> I["mu = 1 at p_hi* = 1 − exp(−(c + sigma²/2))<br/>= 0.092 / 0.168 / 0.287 at g = 0.1 / 0.2 / 0.4"]
+    E --> J["paper calibration p_hi=0.01 → mu ≈ 0.055:<br/>no stationary mean, no practical convergence"]
+    style F fill:#e8ffe8,stroke:#16a34a,stroke-width:2px
+    style J fill:#fff4e8,stroke:#ea580c
+```
+
+**Scope.** The derivation lives in the saturated regime, so it presupposes a
+per-unit ceiling: it describes *maintained, revocable* statuses. A ceiling-free
+token is not the `p_hi → 0` limit of the formula, it is outside it, since with
+`f(S) = theta·S` unbounded the multiplier is not constant and growth is
+super-exponential.
+
+**The `g = 0` corner.** Substituting `c = 0` returns a finite `mu ≈ 2.84`, which
+does *not* contradict the necessity theorem: the formula assumes the saturated
+hazard `p_hi`, whereas the reset here is dominance-triggered. At `g = 0` the most
+extreme of 4000 walkers reaches `S = 17.7` against `S_top = 200`, where the hazard
+is `7.8e-05` — 128× below `p_hi` — so renewals essentially never fire.
 
 ---
 
@@ -299,16 +333,16 @@ flowchart TD
     B --> C{"entry band"}
     C -->|"1480-1520"| D["near-equal-RATED<br/>(equal ESTIMATE, not equal skill)"]
     C -->|"1000-2200"| E["heterogeneous control"]
-    D --> F["appearance 1: corr(entry, month-end) = -0.03<br/>'order decoupled from the start'"]
+    D --> F["appearance 1: corr(entry, month-end) = -0.05<br/>(control +0.60) 'order decoupled from the start'"]
     D --> G["appearance 2: lock-in faster than sqrt(tau)<br/>'signature A present'"]
     F --> H["BUT: a 40-point band produces this<br/>whatever the dynamics (range restriction)"]
     G --> I["BUT: an unequal population produces this<br/>at g=0, no amplification at all"]
     D --> J["DIAGNOSTIC: sd entry 5.3 → sd end 213.1<br/>control 211.4 | population 212.1"]
     J --> K["the band was never equal in capability:<br/>symmetry was in the MEASUREMENT"]
     H & I & K --> L["trajectory settles NEITHER A nor B"]
-    M["2013-07 / 2013-12: k-hat<br/>= mean rating, >= 20 games there"] --> N["corr(month-end, k-hat) = 0.77 [0.68,0.85]<br/>corr(entry, k-hat) = -0.08<br/>(CI: --bootstrap 2000, resampling players)"]
-    N --> O["R = 1 − 0.77² ≈ 0.40 [0.28,0.54]<br/>UPPER bound (k-hat error attenuates)"]
-    O --> P["≥ 60% REVEALED skill:<br/>one exogenous channel corrects both errors"]
+    M["2013-07 / 2013-12: k-hat<br/>= mean rating, >= 20 games there"] --> N["corr(month-end, k-hat) = 0.79 [0.70,0.86]<br/>corr(entry, k-hat) = -0.06<br/>(Pearson on log-ratings; --bootstrap 2000)"]
+    N --> O["R = 1 − 0.79² ≈ 0.38 [0.26,0.51]<br/>UPPER bound (k-hat error attenuates)"]
+    O --> P["≈ 62% REVEALED skill:<br/>one exogenous channel corrects both errors"]
     L --> P
     style L fill:#ffe8e8,stroke:#dc2626,stroke-width:2px
     style P fill:#e8ffe8,stroke:#16a34a,stroke-width:2px

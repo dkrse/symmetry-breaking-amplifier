@@ -26,9 +26,12 @@ Run with ONE command (auto-detects the bundled data):
     python3 scripts/musiclab_analysis.py
 Falls back to a synthetic self-test only if the data directory is absent.
 """
+
+
 import argparse, os, csv
 from math import erf, sqrt
 import numpy as np
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "data", "musiclab", "musiclab_data")
@@ -42,6 +45,7 @@ EXTRA = {3: "exp3", 4: "exp4(inverted)"} # reported for completeness, not in the
 def market_share(d):
     d = np.asarray(d, float); s = d.sum()
     return d / s if s > 0 else d
+
 
 def spearman(a, b):
     ra = np.argsort(np.argsort(a)); rb = np.argsort(np.argsort(b))
@@ -62,6 +66,9 @@ def p1_two_level(rho_weak, rho_strong):
     den = (a.var(ddof=1)/na)**2/(na-1) + (b.var(ddof=1)/nb)**2/(nb-1)
     return t, num/den
 
+
+
+
 # ---- load one experiment's downloads file --------------------------------
 
 def load_experiment(E, data_dir):
@@ -80,6 +87,8 @@ def load_experiment(E, data_dir):
     worlds = [market_share(social[:, w]) for w in range(social.shape[1])]
 
     return Q, worlds
+
+
 
 # ---- analysis -------------------------------------------------------------
 
@@ -132,6 +141,7 @@ def attenuation_check(data_dir, reps=400, seed=0):
           f"the reported effect is conservative.")
 
 
+
 def run_real(data_dir):
     print("MUSIC LAB (real data) -- causal test of E2 decoupling\n")
     print("Per-experiment rho = Spearman(world download share, independent-world quality):")
@@ -145,7 +155,8 @@ def run_real(data_dir):
     if 1 in rhos and 2 in rhos:
         weak, strong = rhos[1], rhos[2]
         t, df = p1_two_level(weak, strong)
-        p = 0.5 * (1 - erf(t / sqrt(2)))               # one-sided normal approx
+        from scipy.stats import t as student_t
+        p = float(student_t.sf(t, df))                 # exact one-sided Welch t
         print(f"\nP1 test  H1: rho_weak(exp1) > rho_strong(exp2)")
         print(f"  rho_weak  = {weak.mean():.3f}  (n={len(weak)})")
         print(f"  rho_strong= {strong.mean():.3f}  (n={len(strong)})")
@@ -162,6 +173,9 @@ def run_real(data_dir):
               "multi-level gain sweep\n(>=5 levels x 20 worlds) is the "
               "pre-registered high-power version.")
         attenuation_check(data_dir)
+
+
+
 
 # ---- synthetic fallback ---------------------------------------------------
 

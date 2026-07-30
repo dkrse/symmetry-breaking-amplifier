@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+
 """
-Symmetry-breaking simulation for the companion paper
-("Breaking Symmetry, Not Choosing Direction").
+Symmetry-breaking simulation for the companion paper ("Multiplicative
+amplification of position in social hierarchies: identifiable dynamics and an
+unidentifiable seed").
 
 Model (paper Eq. 1), written in log-status x = ln S:
 
@@ -16,16 +18,18 @@ and a Kesten reverse-dominance reset (paper Sec. 6): the top is toppled
 with a state-dependent hazard and sent back near the floor.
 
 Three experiments, each answering one claim of the companion paper:
-
   E1  Symmetry breaking. A homogeneous start (all x_i = 0 + infinitesimal
       noise) is an UNSTABLE state when g>0, sigma>0: dispersion grows even at
       g=0, but only DIFFUSIVELY (Var ~ sigma^2 t). Hierarchy (g>0) manufactures
       it MULTIPLICATIVELY on top. The gain-controlled quantity is the
       amplification factor A(g) = Var_g(T)/Var_0(T), the analogue of the
       "manufactured by hierarchy" term d*sigma_a^2 of paper Eq. 2. A(g) is
-      non-monotone: it peaks at an optimal gain g* ~ 1/(theta*S0*T) and then
-      falls, because the saturating feedback that stabilises the amplifier also
-      caps and destroys the dispersion at high gain (see optimal_gain_scan()).
+      non-monotone: it peaks at a horizon-dependent gain g*(T) and then falls,
+      because the saturating feedback that stabilises the amplifier also caps and
+      destroys the dispersion at high gain. NOTE: the mean-field estimate
+      g* ~ 1/(theta*S0*T) gives the direction but NOT the exponent; the coarse
+      optimal_gain_scan() below is superseded by optimal_gain_fit.py, which
+      measures g* ~ T^-0.56. Only the non-monotonicity is claimed.
 
   E2  Direction is independent of correctness (rho_eff _|_ k). Give every
       entity a tiny TRUE quality advantage q_i. Measure the rank correlation
@@ -47,6 +51,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+
+
 OUT = Path(__file__).resolve().parent.parent / "output" / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -56,14 +62,18 @@ def feedback(S, theta, S_star):
     """Gould saturating feedback, Eq. 6: linear at small S, ceiling at large S."""
     return theta * S / (1.0 + S / S_star)
 
+
 def feedback_x(x, theta, S_star):
     """Same feedback in log-status x=ln S, numerically stable for large x:
     f = theta e^x/(1+e^x/S*) = theta/(e^{-x} + 1/S*)  ->  theta S* as x->inf."""
     return theta / (np.exp(-x) + 1.0 / S_star)
 
-def reset_hazard(S, p_hi, S_crit, w):
+
+def reset_hazard(S, p_hi, S_top, w):
     """Reverse-dominance reset hazard, Sec. 6: rises with dominance (logistic in ln S)."""
-    return p_hi / (1.0 + np.exp(-(np.log(S) - np.log(S_crit)) / w))
+    return p_hi / (1.0 + np.exp(-(np.log(S) - np.log(S_top)) / w))
+
+
 
 def step(x, rng, g, sigma, theta, S_star, reset_kw):
     """One update of the log-status vector x (stable feedback in x)."""
@@ -71,16 +81,19 @@ def step(x, rng, g, sigma, theta, S_star, reset_kw):
 
     # Kesten reset: topple the over-dominant back near the floor.
     if reset_kw is not None:
-        # hazard rises with dominance: logistic in (x - ln S_crit)
+        # hazard rises with dominance: logistic in (x - ln S_top)
         hz = reset_hazard(np.exp(np.minimum(x, 700.0)), **reset_kw)
         toppled = rng.random(x.shape) < hz
         x = np.where(toppled, rng.normal(0.0, sigma), x)
 
     return x
 
+
+
 # ---- E1: symmetry-breaking time ------------------------------------------
 
 def e1_symmetry_breaking(seed=0):
+
     """From a homogeneous start, dispersion grows even at g=0 -- but only
     DIFFUSIVELY (Var ~ sigma^2 t, from noise). Hierarchy (g>0) grows it
     MULTIPLICATIVELY on top of that. The clean, gain-controlled quantity is
@@ -93,6 +106,8 @@ def e1_symmetry_breaking(seed=0):
     diffusion a flat (non-hierarchical) population would produce anyway.
     A(0)=1; it rises with gain and plateaus at the saturating-feedback ceiling.
     """
+
+
     rng = np.random.default_rng(seed)
     N, T = 4000, 300
     sigma, theta, S_star = 0.05, 0.02, 50.0
@@ -129,6 +144,8 @@ def e1_symmetry_breaking(seed=0):
 
     return A
 
+
+
 # ---- E2: direction vs correctness ----------------------------------------
 
 def e2_direction_vs_correctness(seed=1):
@@ -139,7 +156,7 @@ def e2_direction_vs_correctness(seed=1):
     sigma, theta, S_star = 0.05, 0.02, 50.0
     q_advantage = 0.02  # deterministic per-step drift proportional to true quality
     gains = np.array([0.0, 0.02, 0.05, 0.1, 0.2, 0.4, 0.8])
-    reset_kw = dict(p_hi=0.01, S_crit=200.0, w=0.5)
+    reset_kw = dict(p_hi=0.01, S_top=200.0, w=0.5)
 
     corrs = []
     for g in gains:
@@ -157,6 +174,7 @@ def e2_direction_vs_correctness(seed=1):
         corrs.append(c)
     corrs = np.array(corrs)
 
+
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.plot(gains, corrs, "o-")
     ax.axhline(0, ls=":", c="grey")
@@ -167,7 +185,12 @@ def e2_direction_vs_correctness(seed=1):
     fig.tight_layout(); fig.savefig(OUT / "e2_direction_vs_correctness.png", dpi=200)
     plt.close(fig)
 
+
+
     return dict(zip(gains.tolist(), corrs.tolist()))
+
+
+
 
 # ---- E3: ergodic decomposition + dead ends -------------------------------
 
@@ -176,7 +199,7 @@ def e3_ergodicity_deadends(seed=2):
     M, T = 5000, 400            # M independent single-entity trajectories
     sigma, theta, S_star = 0.05, 0.02, 50.0
     g = 0.2
-    reset_kw = dict(p_hi=0.01, S_crit=200.0, w=0.5)
+    reset_kw = dict(p_hi=0.01, S_top=200.0, w=0.5)
 
     x = rng.normal(0.0, 1e-6, size=M)
     ens_mean = np.empty(T)      # ensemble-average of x  (population "moves")
@@ -206,9 +229,12 @@ def e3_ergodicity_deadends(seed=2):
     fig.tight_layout(); fig.savefig(OUT / "e3_ergodicity_deadends.png", dpi=200)
     plt.close(fig)
 
+
     return dict(frac_stuck=frac_stuck,
                 growth_ensemble=growth_ensemble,
                 growth_typical=growth_typical)
+
+
 
 # ---- E4: amplification is NECESSARY for development (vs mere diffusion) ----
 
@@ -252,7 +278,7 @@ def e4_development(seed=3):
     for g in gains:
         ax[0].plot(var_curves[g], label=f"g={g}")
     ax[0].set(xlabel="time step", ylabel="Var(x)",
-              title="Diffusion (g=0, linear) vs development (g>0)")
+              title="Diffusion (g=0, linear) vs development (larger g)")
     ax[0].set_yscale("log"); ax[0].legend(fontsize=7, ncol=2)
 
     for g in (0.0, 0.1):
@@ -265,11 +291,14 @@ def e4_development(seed=3):
     ps = [stats[g]["persist"] for g in gains]
     ax[2].plot(gains, ps, "o-")
     ax[2].set(xlabel="gain g", ylabel=r"persistence corr$(x_0, x_T)$",
-              title="Attributes wash out at g=0, lock in as g grows")
+              title="Initial order decays at g=0, locks in as g grows")
     fig.tight_layout(); fig.savefig(OUT / "e4_development.png", dpi=200)
     plt.close(fig)
 
     return stats
+
+
+
 
 def e2_multiplicative(seed=1, c=1.0):
     """Robustness for E2: quality enters MULTIPLICATIVELY (scales each entity's
@@ -300,7 +329,9 @@ def e2_multiplicative(seed=1, c=1.0):
 
     return out
 
+
 def robustness_scan(seed=0):
+
     """Do the three headline signatures survive changes in the calibration?
     Reports, over a sigma x theta grid: the peak amplification factor A_peak
     (E1), the E2 correlation drop between g=0 and g=0.6, and the dead-end
@@ -308,8 +339,9 @@ def robustness_scan(seed=0):
     fraction, 1%-40%) are not -- so the paper's point estimates are one point in
     a family, and only the signs are claimed robust.
     """
+
     S_star = 50.0
-    rk = dict(p_hi=0.01, S_crit=200.0, w=0.5)
+    rk = dict(p_hi=0.01, S_top=200.0, w=0.5)
     def run(g, sigma, theta, reset, N=3000, T=300):
         r = np.random.default_rng(seed)
         x = r.normal(0, 1e-6, N)
@@ -317,6 +349,7 @@ def robustness_scan(seed=0):
             x = step(x, r, g, sigma, theta, S_star, rk if reset else None)
 
         return x
+
 
     def e2corr(g, sigma, theta):
         r = np.random.default_rng(1); q = r.normal(0, 1, 1500); x = r.normal(0, 1e-6, 1500)
@@ -336,7 +369,10 @@ def robustness_scan(seed=0):
 
     return rows
 
+
+
 def commitment_scan(seed=0, thresh=0.25):
+
     """Time for SOME path to commit: first step at which the top entity's share
     exceeds `thresh`. Diffusion (g=0) commits slowly and reversibly; amplification
     commits fast and locks in, with a U-shaped time in g (minimum at the same
@@ -344,6 +380,7 @@ def commitment_scan(seed=0, thresh=0.25):
     forms). This is the 'so it does not take too long' claim, made quantitative.
     Returns {g: (commit_time_or_None, final_top_share)}.
     """
+
     N, T = 2000, 2000
     sigma, theta, S_star = 0.05, 0.02, 50.0
     out = {}
@@ -364,6 +401,7 @@ def commitment_scan(seed=0, thresh=0.25):
     return out
 
 def scale_scan(seed=0):
+
     """How the amplifier's role depends on the SIZE of initial differences.
     Sweep the initial-attribute spread s0 at fixed gain and measure how much of
     the final ordering the amplifier MANUFACTURES vs merely REFLECTS:
@@ -377,6 +415,7 @@ def scale_scan(seed=0):
       signal. The 'position not competence' phenomenon is thus a claim about
       SIMILAR entities.
     """
+
     N, T = 4000, 300
     sigma, theta, S_star, g = 0.05, 0.02, 50.0, 0.2
     out = {}
@@ -390,7 +429,9 @@ def scale_scan(seed=0):
                        manuf=float(resid.var() / x.var()))
     return out
 
+
 def early_lead_persistence(seed=7):
+
     """Capability-free signature (paper Sec. 'Early-lead persistence').
 
     How much of the FINAL ordering is already fixed by the first tau-fraction of
@@ -414,12 +455,13 @@ def early_lead_persistence(seed=7):
     the pure amplifier; a Kesten reset (toppling) weakens but does not remove the
     early lock-in, reported separately as tau90 under reset.
     """
+
     N, T = 3000, 600
     sigma, theta, S_star = 0.05, 0.02, 50.0
     taus = np.array([0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0])
     t_idx = np.unique((taus * T).astype(int).clip(1, T))
     gains = [0.0, 0.05, 0.1, 0.2, 0.4]
-    reset_kw = dict(p_hi=0.01, S_crit=200.0, w=0.5)
+    reset_kw = dict(p_hi=0.01, S_top=200.0, w=0.5)
 
     def run(g, reset):
         r = np.random.default_rng(seed)
@@ -447,6 +489,14 @@ def early_lead_persistence(seed=7):
     curves = {g: run(g, None) for g in gains}
     curves_reset = {g: run(g, reset_kw) for g in (0.0, 0.2)}
     base = {float(t / T): float(np.sqrt(t / T)) for t in t_idx}   # sqrt(tau) diffusion law
+    # The proposition derives sqrt(tau) for the PEARSON correlation, but rho(tau)
+    # is measured as a RANK correlation (scale-invariant, so preferable in data).
+    # At g=0 the pair is bivariate normal, so the rank-scale null is exactly
+    # (6/pi) arcsin(sqrt(tau)/2), which sits slightly BELOW sqrt(tau). This is the
+    # whole of the small negative residual of the g=0 curve against sqrt(tau);
+    # using sqrt(tau) on real data is therefore the conservative choice.
+    base_rank = {float(t / T): float((6.0 / np.pi) * np.arcsin(np.sqrt(t / T) / 2.0))
+                 for t in t_idx}
 
     fig, ax = plt.subplots(figsize=(6.4, 4.4))
     xs = sorted(base)
@@ -465,10 +515,13 @@ def early_lead_persistence(seed=7):
     fig.tight_layout(); fig.savefig(OUT / "early_lead_persistence.png", dpi=200)
     plt.close(fig)
 
+
     return dict(curves=curves,
                 tau90={g: tau90(curves[g]) for g in gains},
                 tau90_reset={g: tau90(curves_reset[g]) for g in curves_reset},
-                base=base)
+                base=base, base_rank=base_rank)
+
+
 
 
 def optimal_gain_scan(seed=0):
@@ -493,6 +546,8 @@ def optimal_gain_scan(seed=0):
         rows.append((T, gstar, 1.0 / (theta * S0 * T), gstar * theta * S0 * T))
 
     return rows
+
+
 
 if __name__ == "__main__":
     print("E1 amplification factor A(g) = Var_g(T)/Var_0(T) (dispersion vs pure diffusion):")
@@ -536,10 +591,19 @@ if __name__ == "__main__":
 
     print("\nEarly-lead persistence: corr(rank at tau*T, final rank), capability-free:")
     elp = early_lead_persistence()
-    print("   {:>7}".format("tau") + "".join(f"{('g='+str(g)):>9}" for g in elp["curves"]) + f"{'sqrt(tau)':>11}")
+    print("   {:>7}".format("tau") + "".join(f"{('g='+str(g)):>9}" for g in elp["curves"])
+          + f"{'sqrt(tau)':>11}{'rank null':>11}")
     for tau in sorted(elp["base"]):
         row = "".join(f"{elp['curves'][g][tau]:>9.3f}" for g in elp["curves"])
-        print(f"   {tau:>7.3f}{row}{elp['base'][tau]:>11.3f}")
+        print(f"   {tau:>7.3f}{row}{elp['base'][tau]:>11.3f}{elp['base_rank'][tau]:>11.3f}")
+    import statistics as _st
+    res_sqrt = [elp['curves'][0.0][t] - elp['base'][t] for t in elp['base']]
+    res_rank = [elp['curves'][0.0][t] - elp['base_rank'][t] for t in elp['base']]
+    print(f"   g=0 residual vs sqrt(tau): mean={_st.mean(res_sqrt):+.4f} "
+          f"max|.|={max(abs(r) for r in res_sqrt):.4f}")
+    print(f"   g=0 residual vs rank null: mean={_st.mean(res_rank):+.4f} "
+          f"max|.|={max(abs(r) for r in res_rank):.4f}"
+          "   <- correct baseline for a RANK correlation")
     print("   tau90 (smallest early fraction with rho>=0.9), no reset:")
 
     for g, t in elp["tau90"].items():
@@ -557,3 +621,5 @@ if __name__ == "__main__":
         print(f"   {T:6d} {gstar:8.2f} {pred:12.3f} {ratio:10.2f}")
 
     print(f"\nFigures written to {OUT}")
+
+

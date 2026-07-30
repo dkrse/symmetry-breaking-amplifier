@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """
 Critical threshold / buffer asymmetry: "same mistake, different consequence".
 
@@ -21,6 +22,7 @@ Three demonstrations:
   3. Distribution: the floor turns the tail of dead ends into an absorbing trap
      (bimodal), and outcome tracks starting buffer more than competence.
 """
+
 
 
 from pathlib import Path
@@ -147,6 +149,7 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT, dpi=150)
     print(f"\nwrote {OUT}")
+
 
 
 if __name__ == "__main__":

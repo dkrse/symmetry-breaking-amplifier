@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 """
 Third real domain for Test B: startup funding trajectories (early-lead persistence).
 
@@ -33,6 +34,8 @@ prediction being tested, since unequal quality alone produces that; the curve is
 reported for the collapse, which is a shape comparison across domains. No
 capability/quality variable is used.
 """
+
+
 import csv
 from pathlib import Path
 import numpy as np
@@ -41,6 +44,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "scripts" / "data" / "crunchbase_rounds.csv"
 OUTCSV = ROOT / "output" / "startup_earlylead.csv"
 
+
 # fine tau grid (finer than the 10-point GitHub/Wiki grids)
 TAUS = np.array([0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25,
                  0.3, 0.375, 0.45, 0.55, 0.65, 0.75, 0.85, 1.0])
@@ -48,6 +52,7 @@ TAUS = np.array([0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25,
 COHORT_YEAR = "2010"        # first-round year -> common entry POINT (not equal quality)
 HORIZON_DAYS = 60 * 30.44   # ~60 months of runway, data extends to end-2015
 MIN_ROUNDS = 2              # need a trajectory, not a single point
+
 
 
 def _ordinal(d):
@@ -64,6 +69,8 @@ def _ordinal(d):
         return None
 
 
+
+
 def load_company_rounds():
     """company_permalink -> list of (day_ordinal, amount_usd)."""
     comp = {}
@@ -77,6 +84,7 @@ def load_company_rounds():
             comp.setdefault(r["company_permalink"], []).append((o, amt))
 
     return comp
+
 
 
 def build_cohort(comp):
@@ -163,6 +171,8 @@ def run():
     print(f"\npositions -> {OUTCSV}")
 
     return dict(taus=TAUS, rho=r, tau90=tau90(r), n=P.shape[0])
+
+
 
 
 if __name__ == "__main__":

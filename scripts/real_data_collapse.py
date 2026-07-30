@@ -33,6 +33,8 @@ Two tests:
       master, vs the sqrt(tau) null and the revocable arm.
 The verdict is left to the numbers; nothing is forced to pass.
 """
+
+
 import csv
 from pathlib import Path
 import numpy as np
@@ -41,6 +43,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from data_collapse import sim_amp, FAMILY
+
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "output" / "figures"
@@ -53,11 +56,15 @@ def _prefer_fine(name):
     return fine if fine.exists() else ROOT / "output" / f"{name}.csv"
 
 
+
+
 GH_CSV = _prefer_fine("github_earlylead")
 WIKI_CSV = _prefer_fine("wiki_rfa_earlylead")
 STARTUP_CSV = ROOT / "output" / "startup_earlylead.csv"
 T_SIM = 600
 UGRID = np.linspace(0.05, 1.0, 40)
+
+
 
 
 # --------------------------------------------------------------------------
@@ -79,6 +86,7 @@ def load_positions(path, filt=None):
             rows.append([float(row[c]) for c in tau_cols])
 
     return np.array(rows, dtype=float), taus
+
 
 
 def rho_of(P):
@@ -105,6 +113,7 @@ def rescale(rhos, taus):
 
 
 def het_master(seed=20260709):
+
     """Mean rescaled curve of the g=0 heterogeneity null (paper Eq. rhodrift).
 
     Entities start together but differ in drift, so persistence exceeds sqrt(tau)
@@ -113,6 +122,7 @@ def het_master(seed=20260709):
     excluded -- reported here rather than omitted, since it counts against the
     amplifier reading.
     """
+
     from data_collapse import sim_het, HET_VAR_A
 
     rng = np.random.default_rng(seed)
@@ -126,6 +136,7 @@ def het_master(seed=20260709):
         resc.append(rescale(r, taus)[0])
     resc = np.array(resc)
     m = resc.mean(axis=0)
+
     return m, float(np.sqrt(((resc - m) ** 2).mean()))
 
 
@@ -142,6 +153,8 @@ def sim_master(seed=20260709):
     resc = np.array(resc)
     m = resc.mean(axis=0)
     return m, float(np.sqrt(((resc - m) ** 2).mean())), resc
+
+
 
 
 def _rms(a, b):
@@ -242,6 +255,9 @@ def run():
     fig.savefig(OUT / "real_data_collapse.png", dpi=200)
     plt.close(fig)
     print(f"\nfigure -> {OUT / 'real_data_collapse.png'}")
+
+
+
 
 
 if __name__ == "__main__":

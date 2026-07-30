@@ -8,7 +8,7 @@ deterministic.
 
 ---
 
-## 1. The shared amplifier model (`symmetry_breaking.py`)
+## 1. The shared amplifier model (`symmetry_breaking.py`, `optimal_gain_fit.py`, `kesten_tail.py`)
 
 Everything rests on one update rule, the **position amplifier** written in
 log-status `x = ln S`:
@@ -31,9 +31,14 @@ ceiling `theta * S_star` at large `S`.
 - **`feedback_x(x, theta, S_star)`**: computes `f` directly in log-status, in the
   numerically stable form `theta / (exp(-x) + 1/S_star)`, so it never overflows
   for large `x` and tends to `theta*S_star` as `x -> inf`.
-- **`reset_hazard(S, p_hi, S_crit, w)`**: the reverse-dominance / Kesten reset
+- **`reset_hazard(S, p_hi, S_top, w)`**: the reverse-dominance / Kesten reset
   probability. A logistic in `ln S`: near zero for small `S`, rising toward
-  `p_hi` once `S` exceeds `S_crit`. Models a coalition toppling the over-dominant.
+  `p_hi` once `S` exceeds the dominance threshold `S_top`. Models a coalition
+  toppling the over-dominant. Note this is **state-dependent** killing, not a
+  constant rate: at `g=0` entities never climb to `S_top`, the hazard stays some
+  two orders below `p_hi`, and the process reduces to the plain martingale of the
+  necessity theorem. (`S_top` is deliberately distinct from the `S_crit` of
+  `critical_threshold.py`, which is the *lower*, poverty-trap threshold.)
 - **`step(x, rng, g, sigma, theta, S_star, reset_kw)`**: one update of the whole
   log-status vector:
   1. `x <- x + log1p(g * feedback_x(x)) + normal(0, sigma)`
@@ -52,9 +57,16 @@ A(g) = Var_g(T) / Var_0(T)
 ```
 
 is the dispersion **manufactured by hierarchy** on top of the diffusion a flat
-population (`g=0`) would show anyway. `A(0)=1`; `A(g)` peaks (~400x) then falls,
-because at high gain every entity saturates at the ceiling and the spread
-collapses.
+population (`g=0`) would show anyway. `A(0)=1`; `A(g)` peaks (~400x at `g=0.4`)
+then falls, because at high gain every entity saturates at the ceiling and the
+spread collapses (`A = 169, 45, 14` at `g = 0.8, 1.6, 3.2`).
+
+Note the low-gain end: `A(0.05) = 1.9`, i.e. barely above pure diffusion, and that
+curve has not turned over within `T=300`. This is not a failure of the model but a
+consequence of the blow-up time `t* ~ 1/(g theta S0)`, which at `g=0.05` exceeds
+the horizon. The turnover is horizon-dependent, so "amplification separates from
+diffusion" is a statement about gains whose `t*` fits inside the observation
+window.
 
 ### Optimal gain, derived and scanned (`optimal_gain_scan`)
 
@@ -66,10 +78,70 @@ maximal when the blow-up meets the horizon, `t*(g*) = T`, i.e.
 g* ~ 1 / (theta * S0 * T)
 ```
 
-`optimal_gain_scan` locates the peak of `A(g)` at horizons `T = 150,300,600,1200`
-and checks the predicted `1/T` scaling (`g* = 0.60,0.40,0.30,0.15`; the last
-doubling halves `g*` exactly). The robust claim is the non-monotonicity itself,
-not any single optimum.
+`optimal_gain_scan` locates the peak of `A(g)` on a coarse grid at horizons
+`T = 150,300,600,1200`, giving `g* = 0.60,0.40,0.30,0.15`.
+
+**That scan is superseded, and its apparent confirmation of `1/T` was a grid
+artifact.** `optimal_gain_fit.py` redoes it properly: a 24-point log-spaced gain
+grid, the maximum refined to sub-grid resolution by a parabolic fit in `log g`,
+six horizons up to `T = 2400`, and three seeds. It returns
+
+```
+g* = 0.62, 0.37, 0.24, 0.17, 0.14, 0.13   at T = 150, 300, 600, 1200, 1800, 2400
+fitted exponent  g* ~ T^-alpha  with alpha = 0.56 +/- 0.02
+restricted to T >= 600:                     alpha = 0.44 +/- 0.04
+```
+
+so the exponent is nearer `1/2` than `1`, and restricting to the asymptotic half
+of the range moves it *further* from 1, not closer. The crossover constant
+`g* theta S0 T` drifts monotonically from 1.9 to 6.4 instead of settling. The
+mean-field argument evidently omits the noise-seeding stage that sets the
+effective `S0`. The direction (`g*` falls with `T`, vanishing asymptotically) is
+right; the exponent is not. The robust claim is the non-monotonicity itself, not
+any single optimum or scaling.
+
+### Kesten tail index (`kesten_tail.py`)
+
+In the saturated regime `f -> theta*S_star`, so a surviving entity is multiplied
+each step by `M = exp(c + eta)` with `c = ln(1 + g*theta*S_star)` and
+`eta ~ N(0, sigma^2)`, while the hazard saturates at `p_hi` and renews it at the
+floor. This is multiplicative growth with geometric killing, whose stationary law
+is Pareto with index solving the Cramer condition `(1 - p_hi) E[M^mu] = 1`:
+
+```
+mu = ( -c + sqrt(c^2 - 2 sigma^2 ln(1 - p_hi)) ) / sigma^2
+   -> -ln(1 - p_hi) / c            for sigma^2 << c
+```
+
+i.e. the tail index is the toppling rate over the per-step amplification:
+**contestability sets the tail**. `kesten_tail.py` runs the FULL nonlinear
+dynamics to stationarity over 3 gains x 6 toppling rates and compares a Hill
+estimate against this root. Agreement is good where the tail is resolvable
+(twelve cells with `mu <~ 2`: mean error 3.1%, worst 8.9%); above `mu ~ 2` the
+Hill estimate is biased low, and moving the threshold from the top 2% to the top
+0.5% moves it back toward the prediction in every such cell, which is the
+signature of a non-asymptotic threshold rather than a wrong exponent.
+
+Two consequences worth noting:
+
+- At the illustrative calibration (`p_hi = 0.01`) the formula gives
+  `mu = 0.105, 0.055, 0.030` at `g = 0.1, 0.2, 0.4` — far below 1, so no
+  stationary mean and no convergence at any feasible horizon. The heavy right
+  shoulder in the E4 histogram is a pre-asymptotic transient, which is why no
+  fitted exponent is reported there.
+- Setting `mu = 1` gives `p_hi* = 1 - exp(-(c + sigma^2/2))`
+  (`= 0.092, 0.168, 0.287` at those gains): the contestability a status needs for
+  its distribution to have a mean at all.
+
+Substituting `g = 0` (hence `c = 0`) into the formula returns a finite
+`mu ~ 2.84`, which does **not** contradict the necessity theorem: the formula
+assumes the saturated hazard `p_hi`, whereas the model's killing is
+dominance-triggered, and at `g = 0` nothing ever reaches the toppling region (see
+`reset_hazard` above). The script prints the diagnostic: at `g = 0`, `T = 300`,
+`N = 4000` the most extreme walker reaches `S = 17.7` against `S_top = 200`, where
+the hazard is `7.8e-05`, some 128x below `p_hi`, so renewals essentially never
+fire. A Kesten process with *constant-rate* killing would indeed have a power-law
+tail at zero drift; this one does not, and the difference is testable.
 
 ### E2: direction vs correctness
 
@@ -78,7 +150,13 @@ noise-free per-step drift (the best case for merit). Measure the rank correlatio
 between the final ordering and `q` as `g` rises; it falls monotonically
 (0.94 -> 0.66), i.e. the winner **decouples** from quality as amplification grows.
 `e2_multiplicative` re-runs it with quality scaling each entity's gain instead;
-the correlation is even lower (`<= 0.1`).
+the correlation is even lower (`<= 0.1`), which is the point: merit that must flow
+*through* position is more decoupled, not less, so the additive design of the main
+figure is the one most favourable to competence. Read that comparison only at
+`g > 0` — at `g = 0` a quality that acts by scaling the gain has no channel at all,
+so its correlation is trivially ~0 (measured `0.02`) rather than informatively
+low. The substantive contrast is at `g = 0.8`: `0.10` multiplicative vs `0.66`
+additive.
 
 ### E3: ergodic decomposition and dead ends
 
@@ -154,6 +232,25 @@ Reported: `rho(tau)` per gain, and `tau90` = smallest early fraction with
 `rho >= 0.9`. A Kesten reset (toppling) erases the early lead (`tau90 -> 1`), a
 discriminating sub-signature separating free-token from actively-contested
 amplifiers.
+
+**Two nulls, and which one the measurement actually has.** The proposition derives
+`sqrt(tau)` for the **Pearson** correlation of `x`, but `rho(tau)` is measured as
+a **rank** correlation (scale-invariant, hence the right choice for data). At
+`g=0` the pair `(x(tau T), x(T))` is bivariate normal, so the two are related
+exactly by `rho_S = (6/pi) arcsin(r/2)` and the rank-scale null is
+
+```
+rho_S(tau) = (6/pi) * arcsin(sqrt(tau)/2)   <   sqrt(tau)
+```
+
+below `sqrt(tau)` by ~0.013 at `tau ~ 0.1` (at most ~0.018 near
+`tau ~ 0.35`). The script prints both
+columns and the `g=0` residual against each: **mean `-0.0088` against
+`sqrt(tau)`** (negative at almost every grid point — a bias, not scatter) versus
+**mean `+0.0007` against the rank null** (sign-changing — scatter only). So the
+diffusive baseline is verified more exactly than the `sqrt(tau)` comparison
+suggests, and using `sqrt(tau)` as the null on real data is conservative, since
+the true rank null is lower and clearing `sqrt(tau)` is the harder test.
 
 ---
 
@@ -316,7 +413,29 @@ early-determined when a lead can be toppled.
 **Inference (`--bootstrap B`).** Resampling elections with replacement puts a
 95% CI on the contrast: the free-token-minus-revocable gap at `tau = 0.1` is
 `0.11 [0.09, 0.13]`, positive with zero excluded at every `tau < 1`, and the
-`tau90` difference is `0.245 [0.20, 0.28]` (`B = 2000`, seeded).
+`tau90` difference is `0.275` in the full sample; its bootstrap mean is
+`0.245 [0.20, 0.28]` (`B = 2000`, seeded).
+
+**Heterogeneity placebo (`heterogeneity_placebo`, always printed).** The standing
+worry about any early-lead magnitude is that a persistent trait produces it at
+`g = 0` (Eq. `rhodrift`). Here it can be quantified rather than argued, because
+the two arms are the same votes read two ways. The placebo keeps each election's
+real vote count, gives candidates the empirical spread of final support shares,
+and draws votes i.i.d. given the candidate: heterogeneity is maximal, nothing
+compounds. To first order the gap must vanish, since at an early fraction the
+support-only count has signal `tau*n` against noise `sqrt(tau*n*p*(1-p))` while
+the net count doubles both and the factor cancels. Measured, a small residual
+survives — `rho` is a *rank* correlation and each arm is referred to its own final
+ordering, which the two arms do not share — so the placebo is a calibration, not a
+proof of zero:
+
+```
+placebo:   mean early gap = +0.033,  tau90  0.10 (net) vs 0.05 (support)
+real data: mean early gap = +0.115,  tau90  0.375      vs 0.10
+```
+
+Heterogeneity buys just under a third of the observed `rho` gap and about a fifth
+of the `tau90` separation, so it cannot account for the contrast.
 
 ## 9. Design 2 real data, free-token arm (`github_earlylead.py`, `--online`)
 
@@ -471,8 +590,30 @@ for band in {near-equal-rated 1480-1520, control 1000-2200}:
     sd(entry_elo), sd(monthend_elo)   # entry-band diagnostic: was the band ever equal?
     corr(entry_elo,    k_hat)   # does the seed predict true skill?
     corr(monthend_elo, k_hat)   # does the formed order predict true skill?
-    R = 1 - corr(monthend_elo, k_hat)^2
+    R = 1 - pearson(log monthend_elo, log k_hat)^2
 ```
+
+`R` is a share of **variance**, so the correlation in it must be a Pearson
+correlation on the scale the model is written in (log-status). `1 - rho_S^2` is
+not a variance share, so the Spearman values are printed alongside as the
+order-only summary but never used for `R`; the two agree to within `0.05` in
+every cell.
+
+Two further routines guard the reading, both printed by the same script:
+
+- `within_month_signatures` measures the two TRAJECTORY signatures the paper
+  reports before `k-hat` is admitted, so they are computed rather than asserted:
+  `corr(entry, month-end)` (`-0.05` near-equal vs `+0.60` control) and `rho(tau)`
+  on each player's running net score against the `sqrt(tau)` law (excess positive
+  everywhere, peaking at `+0.28`). Both are then shown to be reproducible at
+  `g = 0` by Eq. `rhodrift`, so neither identifies amplification here.
+- `survivorship_check` (`--survivorship`) reruns the headline row across
+  convergence-filter thresholds of 1, 5, 10, 20, 40 later games. Staying active
+  correlates with skill, so the filter could inflate `corr(month-end, k-hat)` and
+  deflate `R` — the opposite direction to the attenuation argument. It returns
+  `R = 0.45, 0.35, 0.35, 0.38, 0.33` with no monotone trend, and the loosest
+  filter (almost no selection) gives the *highest* `R`, so the filter bounds the
+  precision of `k-hat` rather than manufacturing the correlation.
 
 **The band is not what its name suggests.** A 40-point band makes the entry
 *estimate* narrow, not capability: Lichess seeds newcomers near 1500 precisely
@@ -484,12 +625,12 @@ differ only in how much of it was visible at entry. Hence the naming
 `near-equal-rated`, not `near-equal`.
 
 **Result (Table `tab:lichess`).** The month-end order is decoupled from the entry
-seed (`corr = -0.03`) and locks in faster than `sqrt(tau)`, so it *looks*
-manufactured, yet it predicts converged skill at `0.77`, so `R ~ 0.40`. Because
-measurement error in `k-hat` attenuates the correlation, that `0.40` is an **upper
-bound** on manufacture, so at least about `60%` is revealed skill. The
+seed (`corr = -0.06`) and locks in faster than `sqrt(tau)`, so it *looks*
+manufactured, yet it predicts converged skill at `0.79`, so `R ~ 0.38`. Because
+measurement error in `k-hat` attenuates the correlation, that `0.38` is an **upper
+bound** on manufacture, so at least about `62%` is revealed skill. The
 heterogeneous control is skill-dominated already at entry
-(`corr(entry, k-hat) = 0.71`). The example does not show chess hierarchies are
+(`corr(entry, k-hat) = 0.74`). The example does not show chess hierarchies are
 manufactured. It shows the opposite, and that is the methodological point, twice
 over: the trajectory was silent about the seed (B), as it must be, and **not
 entitled to its verdict on the dynamics (A) either**, since a 40-point band
@@ -497,8 +638,8 @@ produces the entry decoupling whatever the dynamics and an unequal population
 produces the lock-in at `g=0` (section 1, `rho` with a heterogeneous drift). One
 exogenous channel corrects both errors. The headline analysis has no randomness
 and is deterministic given the dumps; `--bootstrap B` adds seeded
-player-resampling CIs (`corr(month-end, k-hat) = 0.77 [0.68, 0.85]`,
-`R = 0.40 [0.28, 0.54]` at `B = 2000`).
+player-resampling CIs (`corr(month-end, k-hat) = 0.79 [0.70, 0.86]`,
+`R = 0.38 [0.26, 0.51]` at `B = 2000`).
 
 ### Data provenance and integrity
 

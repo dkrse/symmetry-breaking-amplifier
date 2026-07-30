@@ -3,6 +3,8 @@
 import numpy as np
 from symmetry_breaking import step
 
+
+
 # ---------- P1: decoupling rises with gain (Music Lab) ----------
 def market(g, Nsongs=48, Ntrials=700, seed=0):
     r=np.random.default_rng(seed)
@@ -13,6 +15,7 @@ def market(g, Nsongs=48, Ntrials=700, seed=0):
         appeal=q*(1+g*share*Nsongs)
         d[r.choice(Nsongs,p=appeal/appeal.sum())]+=1
     return q,d
+
 
 def spearman(a,b):
     ra=np.argsort(np.argsort(a));rb=np.argsort(np.argsort(b))
@@ -28,6 +31,9 @@ for i,g in enumerate(gains):
 print('P1 corr(outcome, quality) by gain:')
 
 for g,row in zip(gains,C): print(f'  g={g:4.1f}  corr={row.mean():.3f} +/- {row.std():.3f}')
+
+
+
 
 # power: slope of corr on gain < 0
 def exp1(W,seed):
@@ -45,6 +51,9 @@ for W in [10,20,30]:
     ts=[exp1(W,s) for s in range(50)]
     print(f'  P1 power W={W}: {np.mean(np.array(ts)<-1.98):.2f}')
 
+
+
+
 # ---------- P8: cohort concentration (Gini), high-gain vs low-gain domain ----------
 # We score the domain contrast by the Gini of final outcomes, NOT a log-gap or a
 # mean/median ratio: on heavy-tailed outcomes the log compresses the tail that
@@ -57,7 +66,7 @@ def gini(x):
 
 def cohort_gini(g,M=2000,T=300,seed=0):
     r=np.random.default_rng(seed);x=r.normal(0,1e-6,M)
-    rk=dict(p_hi=0.01,S_crit=200.0,w=0.5)
+    rk=dict(p_hi=0.01,S_top=200.0,w=0.5)
     for _ in range(T): x=step(x,r,g,0.05,0.02,50.0,rk)
     S=np.exp(x-x.max())            # raw status (rescaled; Gini is scale-invariant)
     return gini(S)
@@ -80,6 +89,7 @@ def exp8(n,seed):
 for n in [10,20,30]:
     ts=[exp8(n,s) for s in range(40)]
     print(f'  P8 power n={n} cohorts/domain: {np.mean(np.array(ts)>1.98):.2f}')
+
 
 # ---------- Withdrawn prediction: a free-token market has NO optimal-gain downturn ----------
 # The download market (preferential attachment, no per-unit ceiling) concentrates

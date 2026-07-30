@@ -17,17 +17,20 @@ and position definitions are not commensurable). The figure is annotated to say 
 
 Usage: python scripts/plot_realdata_earlylead.py   (needs both --online CSVs)
 """
+
 import sys
 from pathlib import Path
 
 import numpy as np
 from scipy.stats import spearmanr
 
+
 ROOT = Path(__file__).resolve().parent.parent
 TAUS = np.array([0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.375, 0.5, 0.75, 1.0])
 GH_CSV = ROOT / "output" / "github_earlylead.csv"
 WIKI_CSV = ROOT / "output" / "wiki_rfa_earlylead.csv"
 OUT = ROOT / "output" / "figures" / "early_lead_realdata.png"
+
 
 
 
@@ -107,6 +110,7 @@ def main():
     fig.savefig(OUT, dpi=150)
 
     print(f"wrote {OUT}")
+
 
 
 if __name__ == "__main__":

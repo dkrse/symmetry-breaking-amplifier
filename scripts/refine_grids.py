@@ -19,6 +19,8 @@ raw sources already in the repo:
 Same fine 18-point grid as startup_earlylead.py, so the three domains are
 directly comparable. real_data_collapse.py prefers these *_fine.csv when present.
 """
+
+
 import csv
 import glob
 import json
@@ -27,6 +29,8 @@ from pathlib import Path
 import numpy as np
 
 import wiki_rfa_toppling as wiki   # reuse the raw RfA parser (offline, bundled gz)
+
+
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "scripts" / "data" / "github_cache"
@@ -38,6 +42,7 @@ FINE = np.array([0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25,
                  0.3, 0.375, 0.45, 0.55, 0.65, 0.75, 0.85, 1.0])
 GH_HORIZON_MONTHS = 24
 MIN_VOTES = 25
+
 
 
 # --------------------------------------------------------------------------
@@ -65,6 +70,8 @@ def _star_times_from_cache(repo):
     return sorted(times)
 
 
+
+
 def refine_github():
     repos = [r["repo"] for r in csv.DictReader(open(GH_COHORT_CSV))]
     rows = []
@@ -87,6 +94,7 @@ def refine_github():
     print(f"GitHub  : {len(rows)} repos on {len(FINE)}-point grid -> {GH_OUT.name}")
 
     return len(rows)
+
 
 
 # --------------------------------------------------------------------------
@@ -124,6 +132,7 @@ def refine_wiki():
           f"-> {WIKI_OUT.name}")
 
     return len(net_rows)
+
 
 
 if __name__ == "__main__":

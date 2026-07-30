@@ -1,83 +1,167 @@
-# Breaking Symmetry, Not Choosing Direction
+# Multiplicative amplification of position in social hierarchies
 
-A Model of Hierarchy as a Position Amplifier, and What It Can and Cannot Recover.
+Identifiable dynamics and an unidentifiable seed: what a hierarchy's trajectory
+can, and cannot, reveal about its own origin.
 
-This repository contains  all analysis code
+This repository contains all analysis code
 (`scripts/`), the bundled Music Lab dataset, and a single-command runner that
 reproduces every figure and headline number.
 
 ## What the paper claims
 
-Hierarchies form even among near-equals. Alongside the usual readings (meritocracy
-sorting on ability, coordination, or cumulative advantage), the paper gives a
-falsifiable **normal form** for a further possibility: position amplifying itself
-from noise, a *symmetry-breaking amplifier of position*. On top of the normal form
-it draws the line the title names, through what such a hierarchy's trajectory can
-and cannot recover about its own origin. The line has two sides.
+This is a **corrective** paper, not a discovery one, and it is worth being plain
+about that up front. It claims no new mechanism: the multiplicative cascade is
+standard and the propositions are elementary on purpose. What it does is show that
+several signatures in current use **do not identify what they are taken to
+identify**, and give the designs that do.
+
+**The inference under attack.** Trajectories of positions are widely used to argue
+that a hierarchy was built by amplification: the early ordering predicts the final
+one far better than diffusion allows, and that excess is read as evidence of
+compounding. The excess is real. It is also **not diagnostic** — entities that
+merely differ in a persistent trait produce it at zero gain, with no feedback
+compounding anything, and because that null carries a free parameter it has *no
+characteristic lock-in speed at all*: sweeping `Var(a)` over four decades moves
+`tau90` from `0.79` to `0.005`, straddling the whole range an amplifier occupies
+and the preferential-attachment null with it. Magnitude therefore separates
+nothing. What survives is a **contrast internal to one system**.
+
+The question is then asked inside a falsifiable **normal form** for one route to
+hierarchy: position amplifying itself from noise, a *symmetry-breaking amplifier
+of position*. That is the vehicle, not the thesis — the paper does **not** claim
+real hierarchies are position amplifiers, and the one case it examines with an
+exogenous channel turns out to be mostly earned. The answer splits in two.
 
 **A. The dynamics are identifiable.** Whether the process amplifies or merely
-diffuses is legible from a trajectory, fixed by three results, each with an
+diffuses is legible from a trajectory, fixed by four results, each with an
 explicit failure condition:
 
 1. **Necessity theorem.** Without the multiplicative feedback the process is a
    martingale, so amplification (not mere multiplicativity) is what any structured,
    heavy-tailed development requires.
 2. **Non-monotone, dispersion-maximising gain.** A per-unit ceiling makes
-   manufactured dispersion peak and then fall with gain (horizon-dependent,
-   `g* ~ 1/T`); plain cumulative advantage, with no ceiling, shows no such downturn.
-3. **Capability-free `sqrt(tau)` early-lead law.** An early-lead-persistence law
+   manufactured dispersion peak and then fall with gain; plain cumulative
+   advantage, with no ceiling, shows no such downturn. The peak is
+   horizon-dependent and vanishes as `T -> inf`. The mean-field estimate
+   `g* ~ 1/T` gets that direction but **not** the exponent: on a dense gain grid
+   over six horizons, `optimal_gain_fit.py` measures `g* ~ T^-0.56 +/- 0.02`
+   (and `-0.44` restricted to `T >= 600`, i.e. further from 1, not closer). The
+   robust claim is the non-monotonicity, not any particular optimum or scaling.
+3. **Closed-form Kesten tail index.** In the saturated regime the stationary law
+   is Pareto, `P(S > s) ~ s^-mu`, with
+   `mu = (-c + sqrt(c^2 - 2 sigma^2 ln(1-p_hi))) / sigma^2` and
+   `c = ln(1 + g theta S*)`. For `mu sigma^2 << c` this is `mu ~ -ln(1-p_hi)/c`:
+   **contestability sets the tail**. `kesten_tail.py` confirms it against a Hill
+   estimate (mean error 3.1% over the twelve grid cells with `mu <~ 2`). Scope: the
+   derivation assumes the saturated regime, so it holds for *maintained,
+   revocable* statuses and **not** for ceiling-free tokens, which lie outside it
+   rather than at its `p_hi -> 0` limit.
+4. **Capability-free `sqrt(tau)` early-lead law.** An early-lead-persistence law
    (`rho(tau)`, the `sqrt(tau)` diffusion baseline, and its collapse under
    revocation) that tells amplification from diffusion without measuring capability.
    The `sqrt(tau)` baseline holds only for a homogeneous *population*, not merely a
    common start: unequal entities clear it at zero gain, so in data the identifying
-   test is the revocation **contrast**, never the size of the excess.
+   test is the revocation **contrast**, never the size of the excess. Note also
+   that `sqrt(tau)` is the null for the *Pearson* correlation, while `rho(tau)` is
+   measured as a *rank* correlation; at `g=0` the pair is bivariate normal, so the
+   rank-scale null is exactly `(6/pi) arcsin(sqrt(tau)/2)`, slightly **below**
+   `sqrt(tau)`. That accounts for the whole systematic residual of the simulated
+   `g=0` curve (mean `-0.0088` against `sqrt(tau)`, `+0.0007` against the rank
+   null), and it makes `sqrt(tau)` the conservative choice on real data.
 
-**B. The seed is *not* identifiable.** Whether what got inflated was capability
-or position, real skill or amplified noise, is **not** recoverable from a
-trajectory. This is the central new result, a **non-identifiability theorem**. The
-map carries capability and position only through their *sum*, and carries a lucky
-early draw and an inherited head start through one identical term, so no statistic
-of the motion recovers the split. The statement that the amplifier keeps no signature of what it
-amplified is therefore a theorem rather than a metaphor, and cannot be refuted by
-data. Recovering B needs an **exogenous, non-amplified handle on capability**
-(quality fixed by construction, randomised, or a convergent later estimate), which
-returns not a verdict but a **manufactured share** `R = 1 - corr^2`.
+**B. The seed is *not* identifiable.** The sharpest defensible form of the result
+is this: **the decomposition of the amplified input is not a function of the
+trajectory.** Every clause matters, and each rules out a misreading. (The paper is
+equally plain about what is *not* deep here: given that the amplifier receives
+capability and position through one channel, their non-separability is close to
+definitional. Its content is that the single channel is forced by the normal form
+and is refutable — a capability-dependent gain or noise would break it and would
+leave trajectory signatures.)
 
-A single large public dataset shows both sides at once (`--lichess`). An
-online-chess cohort with near-equal *entry ratings*, whose order *looks*
-manufactured (decoupled from entry, locking in faster than the `sqrt(tau)` law),
-turns out about `60%` **revealed** skill (`R ~ 0.4`) once a convergent skill
-estimate is admitted. The example is doubly cautionary: neither of those two
-appearances survives inspection either, since the cohort was never homogeneous in
-capability, only in what was known about it at entry.
+- **Decomposition**, not everything. The persistent input `a = k + p` *is*
+  recovered, from the drift of the trajectory, and so are the dynamics (A). What
+  is lost is only the *split* — capability against position, and within position a
+  recurrent advantage against an amplified transient.
+- **Not a function**, rather than badly estimated. Two parameter families induce
+  the **same distribution over observables**, so there is no consistent estimator
+  to be had — not a noisy one. Longer horizons, more entities, denser sampling:
+  none of it bears on the question, because the likelihood is flat along that
+  direction. The signature is not hard to read, it is absent.
+- **Of the trajectory**, not of the world. The split is *not* unknowable; it is
+  unknowable **from this observable**. A different kind of observation settles it
+  immediately — quality fixed by construction, a randomised seed, or a convergent
+  later estimate.
+- And what such a channel returns is a **proportion, not a verdict**: the
+  manufactured share `R = 1 - corr^2`, somewhere between pure symmetry-breaking
+  and pure revelation rather than a decision between them.
+
+**The boundary has teeth, and the central exhibit is one the paper loses**
+(`--lichess`). An online-chess cohort with near-equal *entry ratings* displays
+*every* signature the amplifier reading predicts — a near-equal start, an order
+decoupled from it, lock-in faster than the `sqrt(tau)` law. A trajectory-only
+analysis would therefore classify it as manufactured order. Admit a convergent
+skill estimate and it is about `62%` **revealed** skill (`R ~ 0.38`). The reading
+is wrong. The trajectory is not silent throughout — the cohort's own dispersion
+betrays that its near-equal entry was an artefact of measurement, so the *dynamics*
+reading (A) was never entitled — but between manufacture and revelation (B) it says
+nothing at all, and that is the half no amount of data repairs. The boundary is not
+a caveat to note and move past, it is the difference between a right and a wrong
+answer.
 
 Each result is stated with an explicit failure condition; the empirical passes are
-suggestive rather than confirmatory, and the paper says so.
+suggestive rather than confirmatory, and the paper says so. In particular the
+`rho(tau)` collapse on real data is reported as **inconclusive**, and the Music Lab
+two-point dose-response carries a presentation confound.
 
 ## Reproduce
 
 ```bash
-./run_all.sh            # fast offline reproduction (figures + numbers, ~1-2 min)
-./run_all.sh --power    # + Monte-Carlo power analysis (offline, several minutes)
+./run_all.sh            # fast offline reproduction: figures + every headline number
+./run_all.sh --power    # + power analysis, g*(T) fit, Kesten tail index
 ./run_all.sh --online   # + Design 2 real-data passes (Wikipedia RfA + GitHub)
-./run_all.sh --lichess  # + non-identifiability worked example (Lichess, ~150MB)
+./run_all.sh --lichess  # + non-identifiability worked example (Lichess)
+./run_all.sh --power --online --lichess   # everything
 ./run_all.sh --help
 ```
+
+### How long it takes
+
+Measured wall-clock on one ordinary workstation (8-core, no GPU). Every run also
+prints its own per-script timing, so these are checkable rather than promises.
+
+| Tier | Wall-clock | Dominated by |
+|---|---|---|
+| default (offline) | **≈30 s** | nothing; the ten scripts are under 10 s each |
+| `--power` | **≈22 min** | `kesten_tail.py` 15 min, `power_analysis.py` 5.5 min |
+| `--online` | **≈30 s** | Wikipedia RfA 28 s (+ GitHub API, see below) |
+| `--lichess` | **≈20 s** | once the dumps are cached; see the caveat |
+| **everything** | **≈23 min** | |
+
+Two first-run costs are not in the table. The one-off `pip install` into `.venv`
+takes a minute or two, and `--lichess` streams ≈150 MB of Lichess dumps on its
+first invocation (cached afterwards under `scripts/data/lichess/`), which is
+bandwidth-bound. The `--online` figure assumes the bundled GitHub star cache; with
+`GITHUB_TOKEN` set and a cold cache the GitHub arm re-queries the API and is
+rate-limited rather than compute-limited.
 
 `run_all.sh` bootstraps a local virtual environment (`.venv`) from
 `requirements.txt` (numpy, scipy, matplotlib, requests) and runs the analyses.
 The default and `--power` tiers are fully offline (pure simulation or bundled
-data); the network is touched only for the one-off `pip install`. The `--online`
-tier runs the two real-data Design 2 passes. The `--lichess` tier runs the
+data); the network is touched only for the one-off `pip install`. The `--power`
+tier adds three heavy offline passes: the Monte-Carlo power analysis (≈5.5 min),
+the dense-grid `g*(T)` fit (≈1 min) and the Kesten tail-index check (≈15 min). The
+`--online` tier runs the two real-data Design 2 passes. The `--lichess` tier runs the
 non-identifiability worked example, streaming three monthly Lichess PGN dumps
-(~150 MB, cached under `scripts/data/lichess/`); it needs the `zstd` CLI on PATH
+(≈150 MB, cached under `scripts/data/lichess/`); it needs the `zstd` CLI on PATH
 (`apt install zstd`) and is skipped gracefully if absent.
 
 ## What each script does
 
 | Script | Result | Network |
 |---|---|---|
-| `symmetry_breaking.py` | E1 to E4, optimal gain g\*, robustness, scale scan, early-lead persistence (simulation) | offline |
+| `symmetry_breaking.py` | E1 to E4, robustness, scale scan, early-lead persistence (simulation); its coarse `optimal_gain_scan` is superseded by `optimal_gain_fit.py` | offline |
+| `optimal_gain_fit.py` | dense-grid, sub-grid-resolved fit of the g\*(T) horizon scaling (simulation; `--power`, ≈1 min) | offline |
+| `kesten_tail.py` | Kesten tail index: closed-form Cramer root vs Hill estimate (simulation; `--power`, ≈15 min) | offline |
 | `earlylead_pa_null.py` | preferential-attachment null + free-token/toppling discriminator (simulation) | offline |
 | `data_collapse.py` | universality test: `rho(tau/tau90)` collapse, amplifier vs diffusion/PA (simulation, multi-seed) | offline |
 | `critical_threshold.py` | lower absorbing barrier: buffer asymmetry decouples outcome from competence | offline |
@@ -94,7 +178,7 @@ non-identifiability worked example, streaming three monthly Lichess PGN dumps
 | `lichess_worked_example.py` | non-identifiability worked example: manufactured share `R` and its convergent-`k` discriminator on online chess (Table `tab:lichess`) | Lichess dumps |
 
 \* `startup_earlylead.py` runs offline once `run_all.sh` has fetched the open
-Crunchbase `rounds.csv` (a one-off ~19 MB download); it is skipped with no network.
+Crunchbase `rounds.csv` (a one-off ≈19 MB download); it is skipped with no network.
 
 All simulation randomness is seeded (`numpy.random.default_rng`); figures
 regenerate deterministically into `output/figures/`. Every input dataset is
@@ -118,10 +202,15 @@ heterogeneity inflates on both arms alike and so cannot manufacture:
   contested, revocable status: the model predicts persistence *collapses* toward
   the diffusion regime, because opposition can topple an early front-runner. The
   script measures both arms inside the one RfA dataset (net support = revocable;
-  support-only cumulative = free-token reference). `--bootstrap 2000` resamples
-  elections and puts a 95% CI on the contrast (gap at `tau=0.1`:
-  `0.11 [0.09, 0.13]`; `tau90` difference `0.245 [0.20, 0.28]`; zero excluded at
-  every `tau < 1`).
+  support-only cumulative = free-token reference). `run_all.sh --online` passes
+  `--bootstrap 2000`, resampling elections to put a 95% CI on the contrast (gap at
+  `tau=0.1`: `0.11 [0.09, 0.13]`; `tau90` difference `0.275` in the full sample,
+  bootstrap mean `0.245 [0.20, 0.28]`; zero excluded at every `tau < 1`). It also
+  runs a **heterogeneity placebo**: with i.i.d. votes at
+  zero gain and candidates carrying the empirical spread of final support shares,
+  the same contrast returns a mean early gap of only `+0.033` against `+0.115` in
+  the data, so candidate heterogeneity buys just under a third of the observed gap
+  and cannot account for it.
 
 ### GitHub token
 
@@ -159,8 +248,10 @@ convergent skill estimates), forms a near-equal-**rated** entry cohort (1480–1
 and a heterogeneous control (1000–2200), and prints `Table tab:lichess`:
 
 - **The order looks manufactured.** The order that forms is decoupled from the
-  entry rating (`corr(entry, month-end) = -0.03`) and locks in faster than the
-  `sqrt(tau)` law. From the trajectory alone, it looks manufactured.
+  entry rating (`corr(entry, month-end) = -0.05`, against `+0.60` in the
+  heterogeneous control) and locks in faster than the `sqrt(tau)` law (the excess
+  is positive at every `tau` and peaks at `+0.28`). From the trajectory alone, it
+  looks manufactured.
 - **Neither appearance survives.** The band equalised the entry *estimate*, not
   capability: Lichess seeds newcomers near 1500 precisely because it does not know
   them yet. The script's `Entry-band diagnostic` makes this visible, as the
@@ -169,11 +260,17 @@ and a heterogeneous control (1000–2200), and prints `Table tab:lichess`:
   and the lock-in is what an unequal population produces at zero gain. Neither
   signature identifies A here.
 - **The convergent channel settles B.** The month-end order predicts converged
-  skill at `0.77` (95% bootstrap CI `[0.68, 0.85]` over players,
-  `--bootstrap 2000`), so `R = 1 - 0.77^2 ~ 0.40` (CI `[0.28, 0.54]`), an
-  *upper* bound on manufacture
-  (measurement error in `k-hat` attenuates the correlation), so at least about
-  `60%` is revealed skill. The example does not show chess hierarchies are
+  skill at `0.79` (Pearson on log-ratings, 95% bootstrap CI `[0.70, 0.86]` over
+  players; `run_all.sh --lichess` passes `--bootstrap 2000 --survivorship`), so
+  `R = 1 - 0.79^2 ~ 0.38` (CI `[0.26, 0.51]`), an *upper* bound on manufacture
+  (it charges the amplified trajectory noise to manufacture, and measurement error
+  in `k-hat` attenuates the correlation on top of that), so at least about
+  `62%` is revealed skill. `R` is computed from a **Pearson** correlation because
+  it is a variance share (`1 - rho_Spearman^2` is not); the rank correlations are
+  printed alongside and agree to within `0.05`. `--survivorship` checks that the
+  convergence filter is not doing the work: sweeping its threshold over 1, 5, 10,
+  20, 40 later games returns `R = 0.45, 0.35, 0.35, 0.38, 0.33`, with no monotone
+  trend. The example does not show chess hierarchies are
   manufactured. It shows the opposite, and that is the point: what looked like an
   amplifier acting on noise was shown to be neither, and one exogenous channel
   corrects both errors.

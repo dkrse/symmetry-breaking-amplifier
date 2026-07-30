@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 """
 Test B: data-collapse universality of the early-lead-persistence curve.
 
@@ -39,6 +40,9 @@ or a diffusion/PA curve that lands ON the master, refutes it.
 Style and dynamics match scripts/earlylead_pa_null.py and
 scripts/symmetry_breaking.py (same feedback, same reset).
 """
+
+
+
 import numpy as np
 from pathlib import Path
 import matplotlib
@@ -55,6 +59,7 @@ SEED = 20260709
 # fine tau grid so tau_90 interpolation and the collapse are smooth
 TAUS = np.array([0.005, 0.01, 0.02, 0.035, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3,
                  0.4, 0.5, 0.65, 0.8, 1.0])
+
 
 
 
@@ -75,6 +80,7 @@ def rho_tau(traj):
         rt = _rank(traj[t])
         out.append(np.corrcoef(rt, rf)[0, 1])
     return np.array(out)
+
 
 
 
@@ -123,6 +129,7 @@ def sim_diff(rng, sigma=0.05):
 
 
 def sim_het(rng, var_a, sigma=0.05):
+
     """g=0 with a HETEROGENEOUS per-step drift a_i ~ N(0, var_a).
 
     The null that defeats the magnitude test: entities start together but simply
@@ -156,6 +163,8 @@ def sim_pa(rng, M=None, seed_stock=1.0):
         np.add.at(stock, picks, 1.0)
         traj[t + 1] = stock
     return traj
+
+
 
 
 
@@ -278,6 +287,7 @@ def run():
     return dict(internal=internal, dist_diff=dist_diff, dist_pa=dist_pa,
                 tau90=dict(zip([c["label"] for c in FAMILY], fam_t90)),
                 passed=bool(passed))
+
 
 
 

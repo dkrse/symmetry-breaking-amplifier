@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 """
 Dose-response fingerprint: multiple signatures move together with the gain.
 
@@ -23,6 +24,7 @@ subjects); it makes the identifying prediction explicit and shows what a full
 multi-level sweep should reveal.
 """
 
+
 from pathlib import Path
 
 import numpy as np
@@ -34,8 +36,14 @@ OUT = ROOT / "output" / "figures" / "dose_response.png"
 GAINS = [0.0, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0]
 TAU_EARLY = 0.1
 W = 20                                   # worlds per gain level
+
 # real Music Lab anchor: (illustrative gain, corr(success, independent quality))
-ML_REAL = [(1.0, 0.765), (2.0, 0.651)]   # weak, strong social signal (8 worlds each)
+# Weak / strong social signal, 8 worlds each. The ABSCISSA VALUES ARE NOMINAL:
+# the two experiments differ in presentation (grid vs ranked column) as well as
+# in signal strength, so they cannot be mapped onto gain values. They are plotted
+# to show the predicted direction, not to calibrate g.
+
+ML_REAL = [(1.0, 0.765), (2.0, 0.651)]
 
 
 
@@ -118,6 +126,7 @@ def main():
     fig.savefig(OUT, dpi=150)
 
     print(f"wrote {OUT}")
+
 
 
 if __name__ == "__main__":
