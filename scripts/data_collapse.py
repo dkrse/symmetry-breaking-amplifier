@@ -281,7 +281,7 @@ def run():
     ax[1].set_ylim(0, 1.02)
 
     fig.tight_layout()
-    fig.savefig(OUT / "data_collapse.png", dpi=200)
+    fig.savefig(OUT / "data_collapse.png", dpi=600)
     plt.close(fig)
     print(f"\nfigure -> {OUT / 'data_collapse.png'}")
     return dict(internal=internal, dist_diff=dist_diff, dist_pa=dist_pa,

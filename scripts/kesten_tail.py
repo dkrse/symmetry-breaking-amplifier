@@ -150,7 +150,7 @@ def figure(rows):
     ax[1].legend(fontsize=8)
 
     fig.tight_layout()
-    fig.savefig(OUT / "kesten_tail.png", dpi=200)
+    fig.savefig(OUT / "kesten_tail.png", dpi=600)
     plt.close(fig)
 
 

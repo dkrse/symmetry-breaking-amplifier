@@ -119,7 +119,7 @@ def main(seeds=(0, 1, 2)):
                  rf"$\alpha={alphas.mean():.2f}\pm{alphas.std():.2f}$")
     ax.legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(OUT / "optimal_gain_fit.png", dpi=200)
+    fig.savefig(OUT / "optimal_gain_fit.png", dpi=600)
     plt.close(fig)
     print(f"\nFigure written to {OUT / 'optimal_gain_fit.png'}")
     return table, alphas

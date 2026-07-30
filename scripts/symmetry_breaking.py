@@ -139,7 +139,7 @@ def e1_symmetry_breaking(seed=0):
     ax[1].set(xlabel="gain g", ylabel=r"amplification factor $A(g)$",
               title="Dispersion manufactured by hierarchy (Eq. 2)")
     ax[1].legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(OUT / "e1_symmetry_breaking.png", dpi=200)
+    fig.tight_layout(); fig.savefig(OUT / "e1_symmetry_breaking.png", dpi=600)
     plt.close(fig)
 
     return A
@@ -182,7 +182,7 @@ def e2_direction_vs_correctness(seed=1):
            ylabel="corr(final rank, true quality)",
            title="Who wins decouples from who is 'right' as g grows")
     ax.set_ylim(-0.05, 1.05)
-    fig.tight_layout(); fig.savefig(OUT / "e2_direction_vs_correctness.png", dpi=200)
+    fig.tight_layout(); fig.savefig(OUT / "e2_direction_vs_correctness.png", dpi=600)
     plt.close(fig)
 
 
@@ -226,7 +226,7 @@ def e3_ergodicity_deadends(seed=2):
     ax[1].set(xlabel="final ln S", ylabel="count",
               title=f"Dead ends: {frac_stuck:.0%} end at/below start")
     ax[1].legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(OUT / "e3_ergodicity_deadends.png", dpi=200)
+    fig.tight_layout(); fig.savefig(OUT / "e3_ergodicity_deadends.png", dpi=600)
     plt.close(fig)
 
 
@@ -292,7 +292,7 @@ def e4_development(seed=3):
     ax[2].plot(gains, ps, "o-")
     ax[2].set(xlabel="gain g", ylabel=r"persistence corr$(x_0, x_T)$",
               title="Initial order decays at g=0, locks in as g grows")
-    fig.tight_layout(); fig.savefig(OUT / "e4_development.png", dpi=200)
+    fig.tight_layout(); fig.savefig(OUT / "e4_development.png", dpi=600)
     plt.close(fig)
 
     return stats
@@ -512,7 +512,7 @@ def early_lead_persistence(seed=7):
     ax.set_xscale("log"); ax.set_ylim(-0.05, 1.05)
     ax.axhline(0.9, ls=":", c="grey", lw=0.8)
     ax.legend(fontsize=7)
-    fig.tight_layout(); fig.savefig(OUT / "early_lead_persistence.png", dpi=200)
+    fig.tight_layout(); fig.savefig(OUT / "early_lead_persistence.png", dpi=600)
     plt.close(fig)
 
 

@@ -123,7 +123,7 @@ def main():
     ax.legend(frameon=False, fontsize=8, loc="center right", bbox_to_anchor=(1.0, 0.29))
     fig.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT, dpi=150)
+    fig.savefig(OUT, dpi=600)
 
     print(f"wrote {OUT}")
 

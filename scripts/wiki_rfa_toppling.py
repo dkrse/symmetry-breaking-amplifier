@@ -317,7 +317,7 @@ def main():
     ax.set_ylim(0, 1.02)
     fig.tight_layout()
     Path(args.out_fig).parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.out_fig, dpi=150)
+    fig.savefig(args.out_fig, dpi=600)
 
     print(f"\nwrote {args.out_fig}\nwrote {args.out_csv}")
 

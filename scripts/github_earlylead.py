@@ -379,7 +379,7 @@ def main():
     ax.legend(frameon=False)
     ax.set_ylim(0, 1.02)
     fig.tight_layout()
-    fig.savefig(args.out_fig, dpi=150)
+    fig.savefig(args.out_fig, dpi=600)
 
     print(f"\nwrote {args.out_fig}\nwrote {args.out_csv}")
 

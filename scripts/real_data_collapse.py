@@ -252,7 +252,7 @@ def run():
               title="Rescaled: do the free-token domains collapse?")
     ax[1].set_ylim(0, 1.02); ax[1].legend(fontsize=6.5, loc="lower right")
     fig.tight_layout()
-    fig.savefig(OUT / "real_data_collapse.png", dpi=200)
+    fig.savefig(OUT / "real_data_collapse.png", dpi=600)
     plt.close(fig)
     print(f"\nfigure -> {OUT / 'real_data_collapse.png'}")
 

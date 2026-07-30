@@ -107,7 +107,7 @@ def main():
             color="0.4")
     fig.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT, dpi=150)
+    fig.savefig(OUT, dpi=600)
 
     print(f"wrote {OUT}")
 
