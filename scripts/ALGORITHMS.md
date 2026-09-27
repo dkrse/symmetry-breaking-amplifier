@@ -462,6 +462,12 @@ here, in contrast to the collapse on the toppling arm (section 8).
 
 ## 10. Test B: the `rho(tau)` universality collapse
 
+> **Not in the revised paper.** This test (10a-10c) was reported as inconclusive
+> in the original submission and removed in revision 1, since its real-data half
+> supported no conclusion. The code is retained for completeness. The one part of
+> `data_collapse.py` the revised paper still uses is the heterogeneous-drift sweep
+> of `tau90` over four decades of `Var(a)` (paper Sec. 5.2).
+
 The paper's strongest cross-domain claim (Eq. 1 as a *normal form*, not an
 analogy) predicts more than "each early-lead curve bows above `sqrt(tau)`":
 rescaling each system's horizon by its own `tau90`, the curves `rho(tau/tau90)`

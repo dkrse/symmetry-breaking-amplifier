@@ -280,6 +280,8 @@ flowchart LR
 
 ## Test B, simulation: the rho(tau) collapse (`data_collapse.py`)
 
+> Not in the revised paper (removed in revision 1 as inconclusive); see `ALGORITHMS.md`, section 10.
+
 ```mermaid
 flowchart TD
     A["amplifier FAMILY<br/>(varying g, sigma, ceiling/free-token)"] --> B["each: rho(tau) from homogeneous start"]

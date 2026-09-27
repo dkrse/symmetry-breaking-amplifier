@@ -110,8 +110,15 @@ answer.
 
 Each result is stated with an explicit failure condition; the empirical passes are
 suggestive rather than confirmatory, and the paper says so. In particular the
-`rho(tau)` collapse on real data is reported as **inconclusive**, and the Music Lab
-two-point dose-response carries a presentation confound.
+Music Lab two-point dose-response carries a presentation confound.
+
+**Removed in revision 1.** The original submission also reported a cross-domain
+`rho(tau/tau90)` curve-collapse test (simulation plus three real free-token
+domains, including a Crunchbase startup cohort). Its real-data half was
+inconclusive and supported no conclusion, so it was removed from the revised
+manuscript. The code and data are kept here for completeness; see the
+**Paper-to-repository map** below for what the revised paper does and does not
+use.
 
 ## Reproduce
 
@@ -163,14 +170,14 @@ non-identifiability worked example, streaming three monthly Lichess PGN dumps
 | `optimal_gain_fit.py` | dense-grid, sub-grid-resolved fit of the g\*(T) horizon scaling (simulation; `--power`, ≈1 min) | offline |
 | `kesten_tail.py` | Kesten tail index: closed-form Cramer root vs Hill estimate (simulation; `--power`, ≈15 min) | offline |
 | `earlylead_pa_null.py` | preferential-attachment null + free-token/toppling discriminator (simulation) | offline |
-| `data_collapse.py` | universality test: `rho(tau/tau90)` collapse, amplifier vs diffusion/PA (simulation, multi-seed) | offline |
+| `data_collapse.py` | heterogeneous-drift sweep of `tau90` over four decades of `Var(a)` (paper Sec. 5.2); also the `rho(tau/tau90)` collapse test, **not in the revised paper** | offline |
 | `critical_threshold.py` | lower absorbing barrier: buffer asymmetry decouples outcome from competence | offline |
 | `dose_response.py` | joint dose-response fingerprint (three signatures move with one gain), Music Lab anchor | offline |
 | `regulation.py` | emergent maintenance ceiling S\*/D = 1 across a factor-16 gain range | offline |
 | `musiclab_analysis.py` | Design 1: causal decoupling on the bundled Music Lab data | offline |
-| `startup_earlylead.py` | third free-token domain: startup funding (open Crunchbase 2010 cohort) | offline\* |
-| `refine_grids.py` | re-extract GitHub + Wikipedia early-lead curves on a common 18-point grid | offline |
-| `real_data_collapse.py` | Test B on real data: collapse of three free-token domains + revocable arm | offline |
+| `startup_earlylead.py` | startup funding (open Crunchbase 2010 cohort); **not in the revised paper**, kept for completeness | offline\* |
+| `refine_grids.py` | re-extract GitHub + Wikipedia early-lead curves on a common 18-point grid; **not in the revised paper** | offline |
+| `real_data_collapse.py` | real-data `rho(tau/tau90)` collapse of three free-token domains; **not in the revised paper** (inconclusive, removed in revision 1) | offline |
 | `power_analysis.py` | Design 1 power + cohort-concentration power + download-market Gini sweep (`--power`) | offline |
 | `wiki_rfa_toppling.py` | Design 2 toppling arm: early-lead persistence on Wikipedia RfA (`--online`) | SNAP download |
 | `github_earlylead.py` | Design 2 free-token arm: early-lead persistence on GitHub stars (`--online`) | GitHub API |
@@ -184,6 +191,35 @@ All simulation randomness is seeded (`numpy.random.default_rng`); figures
 regenerate deterministically into `output/figures/`. Every input dataset is
 SHA-256 hashed in `scripts/data/SHA256SUMS`, with source URLs and download
 commands in `scripts/data/DATA_SOURCES.md`.
+
+## Paper-to-repository map (revision 1)
+
+Section numbers refer to the revised manuscript.
+
+| Paper | Result | Script | Figure / table |
+|---|---|---|---|
+| 2.3, Prop. 1 | maintenance ceiling `S*/D = 1` | `regulation.py` | Table 2 |
+| 3.1 | dispersion non-monotone in gain, `A(g)` | `symmetry_breaking.py` (E1) | Fig. 1 |
+| 3.1 | `g*(T)` horizon scaling | `optimal_gain_fit.py` (`--power`) | Fig. 2 |
+| 3.1 | free-token Gini rises monotonically | `power_analysis.py` (`--power`) | text |
+| 3.2, Prop. 2 | amplification necessary; scope scan | `symmetry_breaking.py` (E4, `scale_scan`) | Fig. 3 |
+| 3.3 | closed-form tail index vs Hill | `kesten_tail.py` (`--power`) | Fig. 4, Table 2 |
+| 3.4 | non-ergodicity, dead ends | `symmetry_breaking.py` (E3) | Fig. 5 |
+| 3.5 | parameter sensitivity | `symmetry_breaking.py` (`robustness_scan`) | Table 3 |
+| 4.3 | gain decouples outcome from quality | `symmetry_breaking.py` (E2) | Fig. 6 |
+| 5.1 | `sqrt(tau)` law and rank null | `symmetry_breaking.py` (`early_lead_persistence`) | Fig. 7 |
+| 5.2 | heterogeneity sweep of `tau90` | `data_collapse.py` | text |
+| 5.3 | PA null, toppling discriminator | `earlylead_pa_null.py` | text |
+| 6.1 | Wikipedia revocation contrast, bootstrap, placebo | `wiki_rfa_toppling.py` (`--online`) | Fig. 8 |
+| 6.2 | GitHub stars free-token arm | `github_earlylead.py` (`--online`), `plot_realdata_earlylead.py` | Fig. 8 |
+| 6.3 | Music Lab decoupling, dose-response, power | `musiclab_analysis.py`, `dose_response.py`, `power_analysis.py` | Fig. 9 |
+| 6.4 | manufactured share in online chess | `lichess_worked_example.py` (`--lichess`) | Table 4 |
+| Appendix A | lower threshold, buffer asymmetry | `critical_threshold.py` | Fig. A.1 |
+
+Not used by the revised paper: `startup_earlylead.py`, `refine_grids.py`,
+`real_data_collapse.py`, the collapse half of `data_collapse.py`, and the figures
+`data_collapse.png` and `real_data_collapse.png`. `run_all.sh` still produces
+them.
 
 ## The two Design 2 arms (`--online`)
 
