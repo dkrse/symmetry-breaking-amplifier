@@ -37,13 +37,13 @@ GAINS = [0.0, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0]
 TAU_EARLY = 0.1
 W = 20                                   # worlds per gain level
 
-# real Music Lab anchor: (illustrative gain, corr(success, independent quality))
+# real Music Lab arms: (arm, corr(success, independent quality))
 # Weak / strong social signal, 8 worlds each. The ABSCISSA VALUES ARE NOMINAL:
 # the two experiments differ in presentation (grid vs ranked column) as well as
-# in signal strength, so they cannot be mapped onto gain values. They are plotted
-# to show the predicted direction, not to calibrate g.
+# in signal strength, so they cannot be mapped onto gain values. They are drawn
+# in a separate panel on a categorical axis, to show the predicted direction only.
 
-ML_REAL = [(1.0, 0.765), (2.0, 0.651)]
+ML_REAL = [("weak", 0.765), ("strong", 0.651)]
 
 
 
@@ -100,27 +100,36 @@ def main():
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(7.0, 4.6))
+    # Left: simulated dose-response on the gain axis. Right: the two real Music
+    # Lab arms on a CATEGORICAL axis. They are kept off the gain axis on purpose:
+    # the two experiments differ in presentation as well as signal strength, so
+    # no gain value can be assigned to them; the panel shows direction only.
+    fig, (ax, axr) = plt.subplots(1, 2, figsize=(9.6, 4.6),
+                                  gridspec_kw={"width_ratios": [3, 1.15]})
     ax.plot(GAINS, decoup, "o-", color="steelblue",
             label="decoupling: corr(success, quality)  ↓")
     ax.plot(GAINS, conc, "s-", color="seagreen",
             label="concentration: Gini of downloads  ↑")
     ax.plot(GAINS, early, "^-", color="crimson",
             label=r"early-lead lock-in: $\rho(0.1)$  $\uparrow$")
-    gx = [g for g, _ in ML_REAL]
-    gy = [c for _, c in ML_REAL]
-    ax.plot(gx, gy, "*", color="navy", markersize=15, zorder=5,
-            label="real Music Lab (weak / strong signal)")
-
-    for (g, c) in ML_REAL:
-        ax.annotate(f"{c:.3f}", (g, c), textcoords="offset points",
-                    xytext=(6, 8), fontsize=8, color="navy")
-
     ax.set_xlabel("social-signal strength (gain g)")
     ax.set_ylabel("signature value")
-    ax.set_title("Dose-response fingerprint: three signatures move with one gain knob")
+    ax.set_title("Simulated market: three signatures, one gain knob", fontsize=10)
     ax.set_ylim(0, 1.02)
     ax.legend(frameon=False, fontsize=8, loc="center right", bbox_to_anchor=(1.0, 0.29))
+
+    labels = ["weak signal\n(exp. 1)", "strong signal\n(exp. 2)"]
+    vals = [c for _, c in ML_REAL]
+    axr.plot([0, 1], vals, "*-", color="navy", markersize=15, zorder=5)
+    for x, c in zip([0, 1], vals):
+        axr.annotate(f"{c:.3f}", (x, c), textcoords="offset points",
+                     xytext=(0, 10), ha="center", fontsize=8, color="navy")
+    axr.set_xticks([0, 1]); axr.set_xticklabels(labels, fontsize=8)
+    axr.set_xlim(-0.5, 1.5); axr.set_ylim(0, 1.02)
+    axr.set_ylabel("corr(success, quality)")
+    axr.set_title("Real Music Lab (no gain axis)", fontsize=10)
+    axr.text(0.5, 0.06, "arms differ in presentation\nas well as signal strength",
+             ha="center", fontsize=7, color="dimgray", transform=axr.transAxes)
     fig.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT, dpi=600)

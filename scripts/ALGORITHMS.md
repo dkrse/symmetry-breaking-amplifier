@@ -333,7 +333,7 @@ As gain rises, decoupling **falls** while concentration and lock-in both **rise*
 a coherent joint response no rival reproduces (meritocracy predicts no gain effect;
 plain cumulative advantage has no single tunable gain that moves all three at
 once). The two real Music Lab points (weak/strong signal, `0.765` and `0.651`) are
-overlaid on the decoupling curve as a two-point real anchor.
+drawn in a separate panel on a categorical axis (weak/strong signal), not on the gain axis, because the two experiments differ in presentation as well as signal strength and no gain value can be assigned to them.
 
 ---
 
@@ -436,6 +436,33 @@ real data: mean early gap = +0.115,  tau90  0.375      vs 0.10
 
 Heterogeneity buys just under a third of the observed `rho` gap and about a fifth
 of the `tau90` separation, so it cannot account for the contrast.
+
+### 8b. One functional, varying contestability (`wiki_rfa_contestability.py`, `--online`)
+
+The two arms above are different functionals of the same vote stream, and a
+monotone count locks in earlier partly because it never falls. This script keeps
+one functional, the net support, and lets contestability vary across elections:
+
+1. Elections are binned into quintiles of their final oppose share.
+2. Within each bin, `rho(tau)` and `tau90` are computed for both arms.
+3. A bin-matched placebo (same election sizes and support shares, i.i.d. votes,
+   averaged over 50 replicates) is run per bin; the informative quantity is the
+   data-minus-placebo excess of the free-token-minus-revocable gap.
+4. The slope of `rho_net(0.1)` and of the gap on oppose share is bootstrapped
+   over elections (bins re-formed in each replicate).
+
+Output (2269 elections, 5 quintiles): `rho_net(0.1)` falls 0.99 -> 0.36 with
+oppose share and `tau90` rises 0.05 -> 0.75, but the i.i.d. placebo reproduces
+0.96 -> 0.54 (at high oppose share the net signal `2p-1` is small against its
+binomial noise). The excess gap over placebo is -0.02, -0.02, -0.01, +0.03,
++0.07 across quintiles: monotone, but confined to contested elections. The
+paper reads the Wikipedia contrast accordingly (Section 6.1): it identifies
+lead-triggered revocation, not amplification on its own.
+
+The script also prints a timing diagnostic: oppose votes arrive later than support
+votes in 68% of elections (mean normalised position 0.55 vs 0.47), and the
+oppose share after the first tenth of the sequence exceeds that within it by 8
+percentage points.
 
 ## 9. Design 2 real data, free-token arm (`github_earlylead.py`, `--online`)
 
@@ -656,3 +683,29 @@ The only scripts that touch the network are the `--online` real-data passes
 (sections 8, 9), the one-off Crunchbase fetch for 10b, and the `--lichess` worked
 example (section 11, which fetches ~150 MB of Lichess dumps once, cached under
 `scripts/data/lichess/` and not bundled).
+
+## 12. Extra checks on the chess example (`lichess_extra_checks.py`, `--lichess`)
+
+Two checks requested by the paper's own logic, run on the same cohort and the
+same `k-hat` (+6 months, >= 20 games):
+
+**Single-channel test (Section 4.1 -> 6.4 check iv).** If capability scaled the
+gain or the noise, it would show in the curvature or heteroskedasticity of a
+player's own trajectory. Per player we compute the variance of per-game
+increments and the quadratic (orthogonal-polynomial) curvature, on the running
+net score and on the log-rating, and correlate each with `k-hat` (Spearman, raw
+and partial net of log games; bootstrap CIs over players). Net score: increment
+variance -0.06 [-0.25, 0.14], curvature -0.16 [-0.34, 0.03]; win rate +0.58.
+Log-rating: increment variance -0.03, curvature -0.38 [-0.54, -0.21] in the
+near-equal band against -0.03 in the control. The curvature of the rating is the
+rating system converging on latent skill (mean reversion), not a property of the
+position channel.
+
+**IPW for attrition (check i).** Survival = having `k-hat`. Logistic regression
+of survival on log month-end rating, log games, net score per game and entry
+rating (rating change omitted: collinear inside a 40-point band). Survival is
+driven by games played (+0.46 standardised) and unrelated to month-end rating
+(-0.08); by month-end quartile 0.17, 0.24, 0.29, 0.12. Weighting survivors by
+1/p(survive): corr 0.79 -> 0.77, R 0.38 -> 0.41, bootstrap 95% CI [0.26, 0.57]
+with the survival model refitted per resample; effective sample size 100 of 111.
+

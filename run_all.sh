@@ -110,7 +110,7 @@ if [ -f "$ROOT/output/github_earlylead.csv" ] && [ -f "$ROOT/output/wiki_rfa_ear
 else
   echo ">> skipping real_data_collapse.py: needs output/github_earlylead.csv and output/wiki_rfa_earlylead.csv (run --online)"
 fi
-run dose_response.py         # joint dose-response fingerprint (sim + ML anchor)
+run dose_response.py         # joint dose-response fingerprint (sim; ML arms in a side panel)
 run critical_threshold.py    # lower absorbing barrier: buffer decouples outcome
 run regulation.py            # emergent ceiling S*/D = 1
 run musiclab_analysis.py     # Design 1 (causal decoupling) on bundled Music Lab data
@@ -135,6 +135,9 @@ if [ "$ONLINE" -eq 1 ]; then
   # --bootstrap reproduces the CIs on the free-token-minus-revocable gap quoted
   # in the text; the script downloads the SNAP data if it is not bundled.
   run wiki_rfa_toppling.py --bootstrap 2000
+  # one functional (net support), contestability varied across elections:
+  # quintiles of oppose share, bin-matched i.i.d. placebo, oppose-vote timing
+  run wiki_rfa_contestability.py --bootstrap 1000
   if [ -n "${GITHUB_TOKEN:-}" ]; then
     run github_earlylead.py    # free-token arm: GitHub stars (needs GITHUB_TOKEN)
   else
@@ -159,6 +162,9 @@ if [ "$LICHESS" -eq 1 ]; then
     # --bootstrap/--survivorship reproduce the CIs and the selection sweep in
     # Table tab:lichess and its caveat paragraph.
     run lichess_worked_example.py --bootstrap 2000 --survivorship
+    # single-channel test (increment variance and curvature vs k-hat) and
+    # inverse-probability weighting for attrition (Section 6.4, Robustness i, iv)
+    run lichess_extra_checks.py --bootstrap 1000
   fi
 else
   echo

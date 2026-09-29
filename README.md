@@ -121,7 +121,7 @@ GitHub arm re-queries the API and is limited by the API rate.
 | `earlylead_pa_null.py` | preferential-attachment null and free-token/toppling discriminator | offline |
 | `data_collapse.py` | heterogeneous-drift sweep of `tau90` over four decades of `Var(a)` (paper Sec. 5.2); also the `rho(tau/tau90)` collapse test, not in the revised paper | offline |
 | `critical_threshold.py` | lower absorbing threshold: buffer asymmetry decouples outcome from competence | offline |
-| `dose_response.py` | joint dose-response of three signatures with the gain, with the Music Lab points | offline |
+| `dose_response.py` | joint dose-response of three signatures with the gain; the two Music Lab arms in a separate categorical panel | offline |
 | `regulation.py` | emergent maintenance ceiling `S*/D = 1` across a factor-16 gain range | offline |
 | `musiclab_analysis.py` | decoupling on the bundled Music Lab data | offline |
 | `startup_earlylead.py` | startup funding (open Crunchbase 2010 cohort); not in the revised paper | offline\* |
@@ -129,9 +129,11 @@ GitHub arm re-queries the API and is limited by the API rate.
 | `real_data_collapse.py` | real-data `rho(tau/tau90)` collapse of three free-token domains; not in the revised paper | offline |
 | `power_analysis.py` | Music Lab power analysis, cohort-concentration power, download-market Gini sweep (`--power`) | offline |
 | `wiki_rfa_toppling.py` | early-lead persistence on Wikipedia RfA, both arms, bootstrap and placebo (`--online`) | SNAP download |
+| `wiki_rfa_contestability.py` | net-support persistence by quintile of oppose share, bin-matched placebo, oppose-vote timing (`--online`) | SNAP download |
 | `github_earlylead.py` | early-lead persistence on GitHub stars (`--online`) | GitHub API |
 | `plot_realdata_earlylead.py` | combined real-data early-lead figure | offline |
 | `lichess_worked_example.py` | manufactured share `R` on online chess, with bootstrap and survivorship check (`--lichess`) | Lichess dumps |
+| `lichess_extra_checks.py` | single-channel test (trajectory statistics vs `k-hat`) and IPW for attrition (`--lichess`) | Lichess dumps |
 
 \* `startup_earlylead.py` runs offline once `run_all.sh` has fetched the open
 Crunchbase `rounds.csv` (a one-off download of about 19 MB); it is skipped with
@@ -162,9 +164,11 @@ Section numbers refer to the revised manuscript.
 | 5.2 | heterogeneity sweep of `tau90` | `data_collapse.py` | text |
 | 5.3 | PA null, toppling discriminator | `earlylead_pa_null.py` | text |
 | 6.1 | Wikipedia revocation contrast, bootstrap, placebo | `wiki_rfa_toppling.py` (`--online`) | Fig. 8 |
+| 6.1 | contestability dose-response, quintile placebos, oppose-vote timing | `wiki_rfa_contestability.py` (`--online`) | text |
 | 6.2 | GitHub stars free-token case | `github_earlylead.py` (`--online`), `plot_realdata_earlylead.py` | Fig. 8 |
 | 6.3 | Music Lab decoupling, dose-response, power | `musiclab_analysis.py`, `dose_response.py`, `power_analysis.py` | Fig. 9 |
 | 6.4 | manufactured share in online chess | `lichess_worked_example.py` (`--lichess`) | Table 4 |
+| 6.4 | Robustness (i) IPW and (iv) single-channel test | `lichess_extra_checks.py` (`--lichess`) | text |
 | Appendix A | lower threshold, buffer asymmetry | `critical_threshold.py` | Fig. A.1 |
 
 Not used by the revised paper: `startup_earlylead.py`, `refine_grids.py`,
