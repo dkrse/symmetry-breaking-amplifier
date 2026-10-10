@@ -218,7 +218,7 @@ def e3_ergodicity_deadends(seed=2):
     ax[0].plot(ens_mean, label="ensemble mean  (population moves)")
     ax[0].plot(ens_med, label="median trajectory  (typical entity)")
     ax[0].set(xlabel="time step", ylabel="ln S",
-              title="Non-ergodic: mean ≠ typical")
+              title="Ensemble mean ≠ typical trajectory")
     ax[0].legend(fontsize=8)
 
     ax[1].hist(x, bins=60, color="steelblue")
@@ -285,7 +285,7 @@ def e4_development(seed=3):
         xf = finals[g]; xf = (xf - xf.mean()) / xf.std()
         ax[1].hist(xf, bins=80, density=True, histtype="step", label=f"g={g}")
     ax[1].set(xlabel="standardised final x", ylabel="density", xlim=(-4, 8),
-              title="g=0 Gaussian; g>0 heavy tail (new level)")
+              title="g=0 Gaussian; g>0 heavy right shoulder")
     ax[1].legend(fontsize=8)
 
     ps = [stats[g]["persist"] for g in gains]

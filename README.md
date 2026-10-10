@@ -157,7 +157,7 @@ Section numbers refer to the revised manuscript.
 | 3.1 | free-token Gini rises monotonically | `power_analysis.py` (`--power`) | text |
 | 3.2, Prop. 2 | amplification necessary; scope scan | `symmetry_breaking.py` (E4, `scale_scan`) | Fig. 3 |
 | 3.3 | closed-form tail index against Hill | `kesten_tail.py` (`--power`) | Fig. 4, Table 2 |
-| 3.4 | non-ergodicity, dead ends | `symmetry_breaking.py` (E3) | Fig. 5 |
+| 3.4 | ensemble mean vs typical trajectory, dead ends | `symmetry_breaking.py` (E3) | Fig. 5 |
 | 3.5 | parameter sensitivity | `symmetry_breaking.py` (`robustness_scan`) | Table 3 |
 | 4.3 | gain decouples outcome from quality | `symmetry_breaking.py` (E2) | Fig. 6 |
 | 5.1 | `sqrt(tau)` law and rank null | `symmetry_breaking.py` (`early_lead_persistence`) | Fig. 7 |
